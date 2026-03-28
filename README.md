@@ -13,13 +13,15 @@ Every slider updates the savings timeline instantly. Settings persist across ses
 - **Real-time savings timeline** — every slider change updates the chart, milestones, and target date instantly
 - **Visa transfer modelling** — handles residency permits that require a minimum monthly transfer to a destination bank
   account (spending money, not savings)
-- **Dual-currency support** — destination expenses entered in local currency, converted via a configurable rate
-- **Optional future expenses** — toggle items like car rental, housing fees, business costs, and emergency fund
-  contributions individually to stress-test your timeline
-- **Three scenarios** — conservative, base case, and optimistic savings rates shown side by side
+- **Dual-currency support** — destination expenses in local currency, converted via a configurable rate
+- **Optional future expenses** — toggle items like car rental, housing fees, and business costs individually to
+  stress-test your timeline
+- **Three scenarios** — conservative, base case, and optimistic savings rates side by side
 - **Milestone tracker** — projected dates for €25k, €50k, €75k, €100k, €125k, and target reached
 - **Live savings chart** — cumulative savings curve with a target reference line
 - **Transfer coverage warning** — alerts when destination living costs exceed the visa transfer amount
+- **Settings page** — configure origin/destination country, currencies, exchange rates, relocation date, and scenario
+  thresholds
 - **Export to JSON** — download a dated snapshot of your current settings
 - **Reset to defaults** — restore all values with confirmation
 - **Dark mode** — full light/dark theme
@@ -46,29 +48,44 @@ Every slider updates the savings timeline instantly. Settings persist across ses
 ## Project structure
 
 ```
-meridian/
-├── app/
-│   ├── assets/css/
-│   │   └── main.css              # Tailwind + Nuxt UI imports
-│   ├── components/
-│   │   ├── AppLogo.vue           # Logo mark + wordmark
-│   │   ├── SavingsChart.vue      # Chart.js timeline chart
-│   │   ├── SectionHeader.vue     # Icon + title + description
-│   │   ├── SliderRow.vue         # Labelled USlider with formatted value
-│   │   └── StatRow.vue           # Key/value row with tone colouring
-│   ├── composables/
-│   │   └── useFormatters.ts      # Currency and date formatting helpers
-│   ├── pages/
-│   │   ├── index.vue             # Main planner
-│   │   └── docs.vue              # How it works
-│   ├── stores/
-│   │   └── budget.ts             # All state and computed values
-│   ├── types/
-│   │   └── budget.ts             # TypeScript interfaces
-│   └── app.vue                   # App shell with header and nav
-├── nuxt.config.ts
-├── app.config.ts                 # Theme (teal primary, slate neutral)
-└── package.json
+app/
+├── components/
+│   ├── budget/
+│   │   ├── Income.vue          # Income sliders
+│   │   ├── Transfer.vue        # Visa transfer + exchange rates
+│   │   ├── DestExpenses.vue    # Destination living costs
+│   │   ├── HomeExpenses.vue    # Home country expenses + flights
+│   │   ├── Optional.vue        # Toggleable future expenses
+│   │   └── Target.vue          # Purchase target + fees
+│   ├── results/
+│   │   ├── Chart.vue           # Savings timeline chart card
+│   │   ├── Milestones.vue      # Progress + milestone dates
+│   │   ├── Scenarios.vue       # Three scenario comparison
+│   │   └── Breakdown.vue       # Monthly savings breakdown
+│   ├── AppLogo.vue             # Logo mark + wordmark
+│   ├── PlannerSummary.vue      # Sticky summary strip
+│   ├── ResetModal.vue          # Reset confirmation modal
+│   ├── SavingsChart.vue        # Chart.js canvas component
+│   ├── SectionHeader.vue       # Icon + title + description
+│   └── StatRow.vue             # Key/value row with tone colouring
+├── composables/
+│   ├── useChartConfig.ts       # Chart.js options + dataset
+│   ├── useFormatters.ts        # Intl-based currency + date formatters
+│   └── useNav.ts               # Navigation items + active state
+├── data/
+│   ├── countries.ts            # Country list grouped by region
+│   ├── currencies.ts           # Currency list with symbols + locales
+│   └── optionalExpenses.ts     # Default optional expense definitions
+├── pages/
+│   ├── index.vue               # Main planner (~50 lines)
+│   ├── docs.vue                # How it works
+│   └── settings.vue            # Global configuration
+├── stores/
+│   ├── budget.ts               # Financial model + computed values
+│   └── settings.ts             # Global config (countries, currencies, rates)
+├── types/
+│   └── index.ts                # All TypeScript interfaces
+└── app.vue                     # App shell + navigation
 ```
 
 ---
@@ -84,7 +101,7 @@ npm install
 # Develop
 npm run dev
 
-# Build
+# Build for production
 npm run build
 
 # Preview production build
@@ -97,7 +114,7 @@ npm run preview
 
 ```
 Monthly savings = Total income
-               − Visa transfer (spent on destination living costs)
+               − Visa transfer (covers destination living costs)
                − Health insurance
                − Flights (amortised monthly)
                − Any enabled optional expenses
@@ -114,33 +131,50 @@ accumulates toward the purchase target.
 
 ## Configuration
 
-Default values are set in `app/stores/budget.ts`. Key fields:
+Global settings live in **Settings** (gear icon in the nav). Key fields:
 
-| Field              | Default      | Description                        |
-|--------------------|--------------|------------------------------------|
-| `incomeYou`        | €4,000/mo    | Your net monthly income            |
-| `incomePartner`    | €3,500/mo    | Partner's net monthly income       |
-| `transferUSD`      | $2,000/mo    | Minimum visa transfer requirement  |
-| `eurUsdRate`       | 1.09         | EUR/USD exchange rate              |
-| `destCurrencyRate` | 52           | Destination currency units per EUR |
-| `rent`             | 45,000 dest. | Monthly rent in local currency     |
-| `groceries`        | €400/mo      | Food shopping                      |
-| `healthInsurance`  | €200/mo      | International cover, 2 people      |
-| `tripsYouPerYear`  | 2            | Return trips home per year         |
-| `flightPriceYou`   | €800         | Cost per person return flight      |
-| `propertyPrice`    | €130,000     | Target purchase price              |
-| `purchaseFees`     | €13,000      | Taxes, legal, agent fees           |
-| `relocationCosts`  | €1,200       | One-time moving and setup costs    |
-| `startDate`        | Jan 2027     | Date savings accumulation begins   |
+| Setting               | Default   | Description                         |
+|-----------------------|-----------|-------------------------------------|
+| Origin country        | Austria   | Where you currently live            |
+| Destination country   | Mauritius | Where you are relocating to         |
+| Origin currency       | EUR       | Currency you earn in                |
+| Destination currency  | MUR       | Local currency at destination       |
+| EUR → USD rate        | 1.09      | For the visa transfer conversion    |
+| Dest. units per EUR   | 52        | e.g. 52 MUR = €1                    |
+| Relocation date       | Jan 2027  | When savings accumulation begins    |
+| Conservative scenario | €4,200/mo | Lower bound for scenario comparison |
+| Optimistic scenario   | €6,500/mo | Upper bound for scenario comparison |
+
+Planner-level defaults (income, rent, groceries, etc.) live in `app/stores/budget.ts`.
+
+---
+
+## Stores
+
+### `budget.ts`
+
+The financial model. All refs, computeds, and the `resetToDefaults` action. Reads `originToUsdRate`,
+`destUnitsPerOrigin`, `relocationDate`, and scenario thresholds from the settings store so the Settings page drives the
+planner.
+
+### `settings.ts`
+
+Global configuration — countries, currencies, exchange rates, relocation date, scenario thresholds, and display
+preferences. Changing the destination country auto-fills the destination currency.
+
+Both stores are persisted to `localStorage` independently:
+
+- Budget state: `meridian-budget-v1`
+- Settings: `meridian-settings-v1`
 
 ---
 
 ## Persistence
 
-Settings are stored in `localStorage` under the key `meridian-budget-v1`. SSR is disabled to avoid hydration mismatches
-with browser storage APIs.
+Use **Export JSON** in the summary strip to save a dated snapshot of your budget state. Use **Reset to defaults** to
+restore factory values. Settings have their own reset button on the Settings page.
 
-Use **Export JSON** to save a dated snapshot. Use **Reset to defaults** to restore factory values.
+SSR is disabled (`ssr: false`) to avoid hydration mismatches with browser storage APIs.
 
 ---
 

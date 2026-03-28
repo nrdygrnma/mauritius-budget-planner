@@ -16,35 +16,43 @@
         label="Monthly transfer (USD)"
         unit="usd"
       />
-      <SliderRow
-        v-model="store.eurUsdRate"
-        :max="1.6"
-        :min="0.8"
-        :step="0.01"
-        label="EUR / USD rate"
-        unit="rate"
-      />
-      <SliderRow
-        v-model="store.destCurrencyRate"
-        :max="10000"
-        :min="1"
-        :step="1"
-        description="e.g. 52 for MUR, 1.09 for USD, 0.86 for GBP"
-        label="Dest. currency per EUR"
-        unit="count"
-      />
     </div>
     <template #footer>
-      <StatRow
-        :value="`≈ ${formatEUR(store.transferEUR)}`"
-        label="Transfer in euros"
-        tone="neutral"
-      />
+      <div class="space-y-1">
+        <StatRow
+          :label="`EUR / USD rate`"
+          :value="settings.originToUsdRate.toFixed(4)"
+          tone="neutral"
+        />
+        <StatRow
+          :label="`${settings.destCurrencyCode} per EUR`"
+          :value="settings.destUnitsPerOrigin.toFixed(4)"
+          tone="neutral"
+        />
+        <StatRow
+          :value="`≈ ${formatEUR(store.transferEUR)}`"
+          label="Transfer in euros"
+          large
+          tone="neutral"
+          top-border
+        />
+      </div>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-3">
+        Exchange rates are managed in
+        <NuxtLink
+          class="underline hover:text-gray-600 dark:hover:text-gray-300"
+          to="/settings"
+        >
+          Settings
+        </NuxtLink>
+        and updated automatically.
+      </p>
     </template>
   </UCard>
 </template>
 
 <script lang="ts" setup>
 const store = useBudgetStore();
+const settings = useSettingsStore();
 const { formatEUR } = useFormatters();
 </script>
