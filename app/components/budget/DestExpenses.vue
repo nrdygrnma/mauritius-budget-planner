@@ -34,19 +34,21 @@
         />
         <SliderRow
           v-model="store.internet"
-          :max="150"
-          :min="10"
-          :step="5"
-          label="Internet"
-          unit="eur"
+          :max="10000"
+          :min="0"
+          :step="100"
+          label="Internet (dest. currency)"
+          tip="Converted to EUR using Settings rate"
+          unit="dest"
         />
         <SliderRow
           v-model="store.mobilePhones"
-          :max="100"
-          :min="10"
-          :step="5"
-          label="Mobile phones (2×)"
-          unit="eur"
+          :max="10000"
+          :min="0"
+          :step="100"
+          label="Mobile phones (2×, dest. currency)"
+          tip="Converted to EUR using Settings rate"
+          unit="dest"
         />
       </div>
 
@@ -126,7 +128,7 @@
         <StatRow
           :value="`−${formatEUR(store.totalDestExpenses)}`"
           label="Total destination expenses"
-          tip="All destination expenses converted to euros. This should be covered by your visa transfer — see the surplus line below"
+          tip="Should be covered by visa transfer"
           tone="negative"
         />
         <StatRow

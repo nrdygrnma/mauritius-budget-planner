@@ -37,8 +37,8 @@ export const useBudgetStore = defineStore(
     // ── Destination living expenses ───────────────────────────
     const rent = ref(45000); // destination currency
     const electricity = ref(4500); // destination currency
-    const internet = ref(29); // EUR
-    const mobilePhones = ref(29); // EUR
+    const internet = ref(2000); // destination currency
+    const mobilePhones = ref(600); // destination currency
     const groceries = ref(400); // EUR
     const diningOut = ref(77); // EUR
     const transport = ref(96); // EUR
@@ -48,9 +48,13 @@ export const useBudgetStore = defineStore(
 
     const totalDestExpenses = computed(
       () =>
-        Math.round((rent.value + electricity.value) / destCurrencyRate.value) +
-        internet.value +
-        mobilePhones.value +
+        Math.round(
+          (rent.value +
+            electricity.value +
+            internet.value +
+            mobilePhones.value) /
+            destCurrencyRate.value,
+        ) +
         groceries.value +
         diningOut.value +
         transport.value +
