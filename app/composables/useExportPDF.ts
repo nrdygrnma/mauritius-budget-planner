@@ -69,15 +69,18 @@ export const useExportPDF = () => {
 
     function sectionCard(title: string) {
       checkPageBreak(14);
+      // Full-width tinted background
+      doc.setFillColor(...c.accentBg);
+      doc.rect(marginL, y, contentW, 9, "F");
       // Left accent bar
       doc.setFillColor(...c.primary);
-      doc.rect(marginL, y, 3, 7, "F");
-      // Title
-      setFont(8, "bold", c.primary);
-      doc.text(title.toUpperCase(), marginL + 6, y + 5.2);
-      // Subtle underline
-      hLine(y + 8, marginL, pageW - marginR, c.lightMid, 0.2);
-      y += 12;
+      doc.rect(marginL, y, 3, 9, "F");
+      // Title text
+      setFont(8.5, "bold", c.primary);
+      doc.text(title.toUpperCase(), marginL + 7, y + 6.2);
+      // Bottom rule
+      hLine(y + 9, marginL, pageW - marginR, c.primaryPale, 0.5);
+      y += 13;
     }
 
     function dataRow(
@@ -331,6 +334,7 @@ export const useExportPDF = () => {
     y += 3;
 
     // ── Home expenses ──────────────────────────────────────
+    if (pageH - y < 70) addPage();
     sectionCard("Home country expenses");
     dataRow("Health insurance", formatEUR(store.healthInsurance));
     dataRow(
@@ -357,6 +361,7 @@ export const useExportPDF = () => {
       (e) => e.enabled,
     );
     if (activeOptionals.length > 0) {
+      if (pageH - y < 60) addPage();
       sectionCard("Optional expenses (active)");
       activeOptionals.forEach((e, i) => {
         dataRow(
@@ -376,6 +381,8 @@ export const useExportPDF = () => {
     }
 
     // ── Purchase target ────────────────────────────────────
+    if (pageH - y < 55) addPage();
+
     sectionCard("Purchase target");
     dataRow("Target property price", formatEUR(store.propertyPrice));
     dataRow(
@@ -398,6 +405,8 @@ export const useExportPDF = () => {
 
     // ── Savings breakdown ──────────────────────────────────
     checkPageBreak(55);
+    if (pageH - y < 60) addPage();
+
     sectionCard("Monthly savings breakdown");
     dataRow("Combined income", formatEUR(store.totalIncome), "positive");
     dataRow(
@@ -435,6 +444,8 @@ export const useExportPDF = () => {
 
     // ── Scenarios ──────────────────────────────────────────
     checkPageBreak(45);
+    if (pageH - y < 50) addPage();
+
     sectionCard("Three scenarios");
     store.scenarios.forEach((s, i) => {
       dataRow(
@@ -451,6 +462,8 @@ export const useExportPDF = () => {
 
     // ── Milestones ─────────────────────────────────────────
     checkPageBreak(45);
+    if (pageH - y < 55) addPage();
+
     sectionCard("Milestones");
     store.milestones.forEach((m, i) => {
       const isTarget = m.label === "Target reached";
