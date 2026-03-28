@@ -23,8 +23,23 @@
       <span
         class="text-xs text-gray-400 dark:text-gray-500 font-normal hidden sm:block"
       >
-        Budget Planner
+        {{ settings.plannerName || "relocation planner" }}
       </span>
     </div>
   </div>
 </template>
+
+How it all connects The settings store is the single source of truth for global
+configuration. The budget store reads originToUsdRate, destUnitsPerOrigin,
+relocationDate, conservativeRate, and optimisticRate from settings rather than
+keeping its own copies. When the user changes the destination country on the
+settings page, the currency auto-fills; exchange rates update independently. The
+planner page sliders for EUR/USD rate and dest currency rate now act as
+fine-tuning on top of whatever the settings page established. The plannerName
+shows in the logo subtitle so if someone configures "Move to Thailand 2026",
+it's always visible in the header as a reminder of which plan they're working
+on.
+
+<script lang="ts" setup>
+const settings = useSettingsStore();
+</script>

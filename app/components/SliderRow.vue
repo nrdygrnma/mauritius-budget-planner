@@ -38,13 +38,14 @@ const props = defineProps<{
   min: number;
   max: number;
   step: number;
-  unit?: "eur" | "usd" | "rs" | "count" | "rate";
+  unit?: "eur" | "usd" | "rs" | "rate" | "dest" | "count";
   description?: string;
   disabled?: boolean;
 }>();
 
 const model = defineModel<number>({ required: true });
-const { formatEUR, formatRs, formatUSD, formatRate } = useFormatters();
+const { formatEUR, formatUSD, formatDestCurrency, formatCount, formatRate } =
+  useFormatters();
 
 const displayValue = computed(() => {
   const v = model.value ?? props.min;
@@ -53,10 +54,12 @@ const displayValue = computed(() => {
       return formatEUR(v);
     case "usd":
       return formatUSD(v);
-    case "rs":
-      return formatRs(v);
+    case "dest":
+      return formatDestCurrency(v);
     case "rate":
       return formatRate(v);
+    case "count":
+      return formatCount(v);
     default:
       return String(v);
   }

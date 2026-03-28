@@ -14,3 +14,18 @@ export interface Milestone {
   date: Date | null;
   months: number | null;
 }
+
+export interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+  locale: string;
+}
+
+export interface Country {
+  name: string;
+  code: string;
+  flag: string;
+  currency: string;
+  region: string;
+}

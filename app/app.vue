@@ -6,23 +6,21 @@
       <div
         class="max-w-7xl mx-auto px-6 h-full flex items-center justify-between gap-4"
       >
-        <NuxtLink class="shrink-0" to="/">
+        <NuxtLink class="flex-shrink-0" to="/">
           <AppLogo />
         </NuxtLink>
-
         <nav class="hidden md:flex items-center gap-1">
           <UButton
             v-for="item in navItems"
             :key="item.to"
-            :color="route.path === item.to ? 'primary' : 'neutral'"
+            :color="isActive(item.to) ? 'primary' : 'neutral'"
             :icon="item.icon"
             :label="item.label"
             :to="item.to"
-            :variant="route.path === item.to ? 'soft' : 'ghost'"
+            :variant="isActive(item.to) ? 'soft' : 'ghost'"
             size="sm"
           />
         </nav>
-
         <div class="flex items-center gap-2">
           <UColorModeButton color="neutral" size="sm" variant="ghost" />
           <button
@@ -38,7 +36,6 @@
           </button>
         </div>
       </div>
-
       <div
         v-if="mobileMenuOpen"
         class="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 space-y-1"
@@ -46,38 +43,25 @@
         <UButton
           v-for="item in navItems"
           :key="item.to"
-          :color="route.path === item.to ? 'primary' : 'neutral'"
+          :color="isActive(item.to) ? 'primary' : 'neutral'"
           :icon="item.icon"
           :label="item.label"
           :to="item.to"
-          :variant="route.path === item.to ? 'soft' : 'ghost'"
+          :variant="isActive(item.to) ? 'soft' : 'ghost'"
           class="w-full justify-start"
           size="sm"
           @click="mobileMenuOpen = false"
         />
       </div>
     </header>
-
     <NuxtPage />
   </UApp>
 </template>
 
 <script lang="ts" setup>
-const route = useRoute();
+const { items: navItems, isActive } = useNav();
 const mobileMenuOpen = ref(false);
-
-const navItems = [
-  {
-    label: "Planner",
-    icon: "i-lucide-sliders-horizontal",
-    to: "/",
-  },
-  {
-    label: "Docs",
-    icon: "i-lucide-book-open",
-    to: "/docs",
-  },
-];
+const route = useRoute();
 
 watch(
   () => route.path,

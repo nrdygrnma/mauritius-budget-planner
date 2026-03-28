@@ -1,168 +1,101 @@
 import { defineStore } from "pinia";
-import { addMonths, format } from "date-fns";
-import type { Milestone, OptionalExpense } from "~/types/budget";
+import { addMonths } from "date-fns";
+import type { Milestone, OptionalExpense } from "~/types";
+import { DEFAULT_OPTIONAL_EXPENSES } from "~/data/optionalExpenses";
 
 export const useBudgetStore = defineStore(
   "budget",
   () => {
+    const settings = useSettingsStore();
+    const optionalExpenses = ref<Record<string, OptionalExpense>>(
+      structuredClone(DEFAULT_OPTIONAL_EXPENSES),
+    );
     // ── Income ────────────────────────────────────────────────
     const incomeYou = ref(4000);
     const incomePartner = ref(3500);
     const totalIncome = computed(() => incomeYou.value + incomePartner.value);
 
-    // ── Permit transfer ───────────────────────────────────────
+    // ── Visa / permit transfer ────────────────────────────────
     const transferUSD = ref(2000);
-    const eurUsdRate = ref(1.09);
-    const murEurRate = ref(52);
+    const eurUsdRate = computed({
+      get: () => settings.originToUsdRate,
+      set: (v) => {
+        settings.originToUsdRate = v;
+      },
+    });
+    const destCurrencyRate = computed({
+      get: () => settings.destUnitsPerOrigin,
+      set: (v) => {
+        settings.destUnitsPerOrigin = v;
+      },
+    });
+    const destCurrencyCode = ref("MUR"); // 3-letter code shown in UI
     const transferEUR = computed(() =>
       Math.round(transferUSD.value / eurUsdRate.value),
     );
 
-    // ── Mauritius living expenses ──────────────────────────────
-    const rent = ref(45000); // Rs
-    const electricity = ref(4500); // Rs
-    const internet = ref(29); // €
-    const mobilePhones = ref(29); // €
-    const groceries = ref(400); // €
-    const diningOut = ref(77); // €
-    const transport = ref(96); // €
-    const dogMonthly = ref(80); // €
-    const personalCare = ref(58); // €
-    const leisureBuffer = ref(58); // €
+    // ── Destination living expenses ───────────────────────────
+    const rent = ref(45000); // destination currency
+    const electricity = ref(4500); // destination currency
+    const internet = ref(29); // EUR
+    const mobilePhones = ref(29); // EUR
+    const groceries = ref(400); // EUR
+    const diningOut = ref(77); // EUR
+    const transport = ref(96); // EUR
+    const petMonthly = ref(80); // EUR
+    const personalCare = ref(58); // EUR
+    const leisureBuffer = ref(58); // EUR
 
-    const totalMuExpenses = computed(
+    const totalDestExpenses = computed(
       () =>
-        Math.round((rent.value + electricity.value) / murEurRate.value) +
+        Math.round((rent.value + electricity.value) / destCurrencyRate.value) +
         internet.value +
         mobilePhones.value +
         groceries.value +
         diningOut.value +
         transport.value +
-        dogMonthly.value +
+        petMonthly.value +
         personalCare.value +
         leisureBuffer.value,
     );
-
     const transferSurplus = computed(
-      () => transferEUR.value - totalMuExpenses.value,
+      () => transferEUR.value - totalDestExpenses.value,
     );
     const transferDeficit = computed(() => transferSurplus.value < 0);
 
-    // ── European expenses ──────────────────────────────────────
+    // ── Home country expenses ─────────────────────────────────
     const healthInsurance = ref(200);
     const tripsYouPerYear = ref(2);
     const flightPriceYou = ref(800);
-    const numChildren = ref(2);
-    const tripsKidsPerYear = ref(1);
-    const flightPriceKids = ref(800);
+    const numDependants = ref(2);
+    const tripsVisitorsPerYear = ref(1);
+    const flightPriceVisitors = ref(800);
 
     const flightsYouAnnual = computed(
       () => tripsYouPerYear.value * 2 * flightPriceYou.value,
     );
-    const flightsKidsAnnual = computed(
-      () => numChildren.value * tripsKidsPerYear.value * flightPriceKids.value,
+    const flightsVisitorsAnnual = computed(
+      () =>
+        numDependants.value *
+        tripsVisitorsPerYear.value *
+        flightPriceVisitors.value,
     );
     const flightsYouMonthly = computed(() =>
       Math.round(flightsYouAnnual.value / 12),
     );
-    const flightsKidsMonthly = computed(() =>
-      Math.round(flightsKidsAnnual.value / 12),
+    const flightsVisitorsMonthly = computed(() =>
+      Math.round(flightsVisitorsAnnual.value / 12),
     );
     const totalFlightsMonthly = computed(
-      () => flightsYouMonthly.value + flightsKidsMonthly.value,
+      () => flightsYouMonthly.value + flightsVisitorsMonthly.value,
     );
-    const totalEuDeductions = computed(
+    const totalHomeDeductions = computed(
       () =>
         transferEUR.value + healthInsurance.value + totalFlightsMonthly.value,
     );
     const monthlySavings = computed(
-      () => totalIncome.value - totalEuDeductions.value,
+      () => totalIncome.value - totalHomeDeductions.value,
     );
-
-    // ── Optional future expenses ───────────────────────────────
-    const optionalExpenses = ref<Record<string, OptionalExpense>>({
-      carRental: {
-        enabled: false,
-        value: 300,
-        label: "Car rental / lease",
-        min: 100,
-        max: 800,
-        step: 50,
-        description: "Year 2+ when you move off public transport",
-      },
-      carInsurance: {
-        enabled: false,
-        value: 80,
-        label: "Car insurance + road tax",
-        min: 30,
-        max: 200,
-        step: 10,
-        description: "Annual cost amortised monthly",
-      },
-      fuel: {
-        enabled: false,
-        value: 60,
-        label: "Fuel",
-        min: 20,
-        max: 200,
-        step: 10,
-        description: "Only applicable once you have a car",
-      },
-      healthTopUp: {
-        enabled: false,
-        value: 100,
-        label: "Private healthcare top-up",
-        min: 0,
-        max: 400,
-        step: 10,
-        description: "Specialist visits beyond base insurance",
-      },
-      syndicFees: {
-        enabled: false,
-        value: 170,
-        label: "Syndic fees",
-        min: 50,
-        max: 500,
-        step: 10,
-        description: "Monthly building management fee once you own",
-      },
-      professionalSubs: {
-        enabled: false,
-        value: 80,
-        label: "Professional subscriptions",
-        min: 0,
-        max: 300,
-        step: 10,
-        description: "Tools, certifications, CT-AI study materials",
-      },
-      consultingCosts: {
-        enabled: false,
-        value: 100,
-        label: "Consulting business costs",
-        min: 0,
-        max: 400,
-        step: 10,
-        description: "Software, accounting, backup internet",
-      },
-      emergencyFund: {
-        enabled: false,
-        value: 200,
-        label: "Emergency fund contribution",
-        min: 50,
-        max: 500,
-        step: 50,
-        description: "Monthly target toward a 3-month reserve",
-      },
-      familySupport: {
-        enabled: false,
-        value: 0,
-        label: "Family support / remittances",
-        min: 0,
-        max: 500,
-        step: 50,
-        description: "Support to family remaining in Europe",
-      },
-    });
 
     const totalOptionalActive = computed(() =>
       Object.values(optionalExpenses.value)
@@ -177,15 +110,15 @@ export const useBudgetStore = defineStore(
       () => monthlySavings.value - totalOptionalActive.value,
     );
 
-    // ── Property target ────────────────────────────────────────
+    // ── Property / purchase target ────────────────────────────
     const propertyPrice = ref(130000);
     const purchaseFees = ref(13000);
-    const dogRelocation = ref(1200);
+    const relocationCosts = ref(1200); // one-time moving/setup costs
     const existingSavings = ref(0);
-    const startDate = ref(new Date(2027, 0, 1));
+    const startDate = computed(() => settings.relocationDate);
 
     const grandTotal = computed(
-      () => propertyPrice.value + purchaseFees.value + dogRelocation.value,
+      () => propertyPrice.value + purchaseFees.value + relocationCosts.value,
     );
     const remaining = computed(() =>
       Math.max(0, grandTotal.value - existingSavings.value),
@@ -207,7 +140,7 @@ export const useBudgetStore = defineStore(
       ),
     );
 
-    // ── Milestones ─────────────────────────────────────────────
+    // ── Milestones ────────────────────────────────────────────
     const milestones = computed<Milestone[]>(() => {
       const targets = [25000, 50000, 75000, 100000, 125000, grandTotal.value];
       return targets
@@ -230,9 +163,13 @@ export const useBudgetStore = defineStore(
         .filter((m) => m.amount <= grandTotal.value);
     });
 
-    // ── Scenarios ──────────────────────────────────────────────
+    // ── Scenarios ─────────────────────────────────────────────
     const scenarios = computed(() => {
-      const rates = [4200, adjustedMonthlySavings.value, 6500];
+      const rates = [
+        settings.conservativeRate,
+        adjustedMonthlySavings.value,
+        settings.optimisticRate,
+      ];
       const labels = ["Conservative", "Base case", "Optimistic"];
       return rates.map((rate, i) => {
         const months = rate > 0 ? Math.ceil(remaining.value / rate) : null;
@@ -246,15 +183,18 @@ export const useBudgetStore = defineStore(
       });
     });
 
-    // ── Savings chart data ─────────────────────────────────────
+    // ── Chart data ────────────────────────────────────────────
     const chartData = computed(() => {
-      if (!monthsToTarget.value) return { labels: [], data: [] };
-      const totalMonths = monthsToTarget.value + 6;
+      const target = monthsToTarget.value;
+      if (target === null) return { labels: [], data: [] }; // ← guard here, not just falsy check
+      const totalMonths = target + 6;
       const labels: string[] = [];
       const data: number[] = [];
       for (let i = 0; i <= totalMonths; i++) {
         const d = addMonths(startDate.value, i);
-        labels.push(format(d, "MMM yyyy"));
+        labels.push(
+          d.toLocaleString("en-GB", { month: "short", year: "numeric" }),
+        );
         data.push(
           Math.min(
             existingSavings.value + adjustedMonthlySavings.value * i,
@@ -265,13 +205,14 @@ export const useBudgetStore = defineStore(
       return { labels, data };
     });
 
-    // ── Reset ──────────────────────────────────────────────────
+    // ── Reset ─────────────────────────────────────────────────
     function resetToDefaults() {
       incomeYou.value = 4000;
       incomePartner.value = 3500;
       transferUSD.value = 2000;
       eurUsdRate.value = 1.09;
-      murEurRate.value = 52;
+      destCurrencyRate.value = 52;
+      destCurrencyCode.value = "MUR";
       rent.value = 45000;
       electricity.value = 4500;
       internet.value = 29;
@@ -279,21 +220,19 @@ export const useBudgetStore = defineStore(
       groceries.value = 400;
       diningOut.value = 77;
       transport.value = 96;
-      dogMonthly.value = 80;
+      petMonthly.value = 80;
       personalCare.value = 58;
       leisureBuffer.value = 58;
       healthInsurance.value = 200;
       tripsYouPerYear.value = 2;
       flightPriceYou.value = 800;
-      numChildren.value = 2;
-      tripsKidsPerYear.value = 1;
-      flightPriceKids.value = 800;
-      Object.values(optionalExpenses.value).forEach((e) => {
-        e.enabled = false;
-      });
+      numDependants.value = 2;
+      tripsVisitorsPerYear.value = 1;
+      flightPriceVisitors.value = 800;
+      optionalExpenses.value = structuredClone(DEFAULT_OPTIONAL_EXPENSES);
       propertyPrice.value = 130000;
       purchaseFees.value = 13000;
-      dogRelocation.value = 1200;
+      relocationCosts.value = 1200;
       existingSavings.value = 0;
     }
 
@@ -305,9 +244,10 @@ export const useBudgetStore = defineStore(
       // transfer
       transferUSD,
       eurUsdRate,
-      murEurRate,
+      destCurrencyRate,
+      destCurrencyCode,
       transferEUR,
-      // MU expenses
+      // destination expenses
       rent,
       electricity,
       internet,
@@ -315,25 +255,25 @@ export const useBudgetStore = defineStore(
       groceries,
       diningOut,
       transport,
-      dogMonthly,
+      petMonthly,
       personalCare,
       leisureBuffer,
-      totalMuExpenses,
+      totalDestExpenses,
       transferSurplus,
       transferDeficit,
-      // EU expenses
+      // home expenses
       healthInsurance,
       tripsYouPerYear,
       flightPriceYou,
-      numChildren,
-      tripsKidsPerYear,
-      flightPriceKids,
+      numDependants,
+      tripsVisitorsPerYear,
+      flightPriceVisitors,
       flightsYouAnnual,
-      flightsKidsAnnual,
+      flightsVisitorsAnnual,
       flightsYouMonthly,
-      flightsKidsMonthly,
+      flightsVisitorsMonthly,
       totalFlightsMonthly,
-      totalEuDeductions,
+      totalHomeDeductions,
       monthlySavings,
       // optional
       optionalExpenses,
@@ -343,8 +283,9 @@ export const useBudgetStore = defineStore(
       // target
       propertyPrice,
       purchaseFees,
-      dogRelocation,
+      relocationCosts,
       existingSavings,
+      startDate,
       grandTotal,
       remaining,
       monthsToTarget,
@@ -359,7 +300,7 @@ export const useBudgetStore = defineStore(
   },
   {
     persist: {
-      key: "mauritius-budget-v1",
+      key: "meridian-budget-v1",
     },
   },
 );
