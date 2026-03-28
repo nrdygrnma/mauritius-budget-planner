@@ -26,7 +26,7 @@
       </template>
       <UFormField
         class="w-full"
-        description="Give your plan a name to distinguish it — e.g. 'Move to Mauritius 2027'"
+        description="Give your plan a name — e.g. 'Move to Mauritius 2027'"
         label="Plan name"
       >
         <UInput
@@ -83,7 +83,6 @@
           />
         </UFormField>
 
-        <!-- Live preview -->
         <div
           v-if="settings.originCountry && settings.destCountry"
           class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
@@ -147,7 +146,6 @@
           />
         </UFormField>
 
-        <!-- Currency summary -->
         <div class="grid grid-cols-2 gap-3">
           <div
             class="p-3 rounded-xl bg-primary-50 dark:bg-primary-950 border border-primary-100 dark:border-primary-900"
@@ -189,25 +187,23 @@
     <UCard>
       <template #header>
         <SectionHeader
-          description="Fetched automatically from Frankfurter (ECB data) or set manually"
+          description="Fetched automatically or set manually"
           icon="i-lucide-arrow-left-right"
           title="Exchange rates"
         />
       </template>
-
       <div class="space-y-5">
-        <!-- Fetch button + status -->
         <div
           class="flex items-center gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
         >
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Live rates via Frankfurter
+              Live rates
             </p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-              <template v-if="rates.state.loading">
-                Fetching live rates…
-              </template>
+              <template v-if="rates.state.loading"
+                >Fetching live rates…</template
+              >
               <template v-else-if="rates.state.lastUpdated">
                 Updated
                 {{
@@ -219,9 +215,9 @@
                 via {{ rates.sourceLabel.value }} ·
                 {{ rates.isStale.value ? "may be outdated" : "fresh" }}
               </template>
-              <template v-else>
-                No data fetched yet — click to get live rates
-              </template>
+              <template v-else
+                >No data fetched yet — click to get live rates</template
+              >
             </p>
             <p
               v-if="rates.state.error"
@@ -241,9 +237,23 @@
           />
         </div>
 
+        <div
+          v-if="rates.state.source"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg bg-teal-50 dark:bg-teal-950 border border-teal-100 dark:border-teal-900"
+        >
+          <UIcon
+            class="w-4 h-4 text-teal-500 shrink-0"
+            name="i-lucide-check-circle"
+          />
+          <p class="text-xs text-teal-700 dark:text-teal-300">
+            {{ settings.originCurrencyCode }} →
+            {{ settings.destCurrencyCode }} rates fetched via
+            {{ rates.sourceLabel.value }}
+          </p>
+        </div>
+
         <USeparator />
 
-        <!-- Manual overrides — always editable -->
         <UFormField
           :description="`How many USD equal 1 ${settings.originCurrencyCode}`"
           :label="`${settings.originCurrencyCode} → USD rate`"
@@ -282,19 +292,24 @@
           />
         </UFormField>
 
-        <!-- Attribution — required by Frankfurter terms -->
         <p class="text-xs text-gray-400 dark:text-gray-500">
-          Live rates provided by
+          Rates from
           <a
             class="underline hover:text-gray-600 dark:hover:text-gray-300"
             href="https://frankfurter.dev"
             rel="noopener"
             target="_blank"
+            >Frankfurter</a
           >
-            Frankfurter
-          </a>
-          (ECB reference rates, updated daily). You are welcome to cache this
-          data and use it for personal currency conversion purposes.
+          (ECB, 31 currencies) or
+          <a
+            class="underline hover:text-gray-600 dark:hover:text-gray-300"
+            href="https://github.com/fawazahmed0/exchange-api"
+            rel="noopener"
+            target="_blank"
+            >fawazahmed0/exchange-api</a
+          >
+          (200+ currencies) — updated daily, for reference only.
         </p>
       </div>
     </UCard>
@@ -347,7 +362,7 @@
     <UCard>
       <template #header>
         <SectionHeader
-          description="Monthly savings rates used for the conservative and optimistic scenarios"
+          description="Monthly savings rates for the conservative and optimistic scenarios"
           icon="i-lucide-sliders-horizontal"
           title="Scenario thresholds"
         />
@@ -380,7 +395,6 @@
           />
         </UFormField>
 
-        <!-- Preview -->
         <div class="grid grid-cols-3 gap-2 text-center">
           <div
             class="p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
@@ -408,6 +422,49 @@
               €{{ settings.optimisticRate.toLocaleString() }}/mo
             </p>
           </div>
+        </div>
+      </div>
+    </UCard>
+
+    <!-- Acquisition fees -->
+    <UCard>
+      <template #header>
+        <SectionHeader
+          description="Applied automatically to the purchase price in the planner"
+          icon="i-lucide-receipt"
+          title="Acquisition fees"
+        />
+      </template>
+      <div class="space-y-5">
+        <UFormField
+          description="Covers registration duty, notary fees, and agent commission. Typically 8–12% depending on country"
+          label="Acquisition fee rate (%)"
+        >
+          <UInputNumber
+            v-model="settings.acquisitionFeePercent"
+            :format-options="{
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+              useGrouping: false,
+            }"
+            :max="30"
+            :min="0"
+            :step="0.5"
+            class="w-full"
+            @change="handleSave"
+          />
+        </UFormField>
+
+        <div
+          class="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-sm"
+        >
+          <span class="text-gray-500 dark:text-gray-400">
+            {{ settings.acquisitionFeePercent }}% of
+            {{ formatEUR(budget.propertyPrice) }}
+          </span>
+          <span class="font-semibold text-gray-900 dark:text-white">
+            = {{ formatEUR(previewFees) }}
+          </span>
         </div>
       </div>
     </UCard>
@@ -440,7 +497,7 @@
       </div>
     </UCard>
 
-    <!-- Reset -->
+    <!-- Footer actions -->
     <div class="flex items-center justify-between pt-2 pb-8">
       <UButton
         color="neutral"
@@ -467,18 +524,24 @@ import type { SelectItem } from "@nuxt/ui";
 
 useHead({ title: "Settings — Meridian" });
 
+const budget = useBudgetStore();
 const settings = useSettingsStore();
 const toast = useToast();
-
+const { formatEUR } = useFormatters();
 const rates = useExchangeRates();
 
-// Currency select items
+const previewFees = computed(
+  () =>
+    Math.round(
+      (budget.propertyPrice * settings.acquisitionFeePercent) / 100 / 100,
+    ) * 100,
+);
+
 const currencyItems = CURRENCIES.map((c) => ({
   label: `${c.symbol} ${c.code} — ${c.name}`,
   value: c.code,
 }));
 
-// Month items
 const monthItems: SelectItem[] = [
   { label: "January", value: 1 },
   { label: "February", value: 2 },
@@ -494,7 +557,6 @@ const monthItems: SelectItem[] = [
   { label: "December", value: 12 },
 ];
 
-// Sync currency when country changes
 function onOriginCountryChange(code: string) {
   settings.applyOriginCountry(code);
 }
@@ -521,18 +583,13 @@ function handleSave() {
 }
 
 onMounted(() => {
-  if (rates.canFetch.value && rates.isStale.value) {
-    rates.fetchRates();
-  }
+  if (rates.isStale.value) rates.fetchRates();
 });
 
-// Re-fetch when currencies change
 watch(
   [() => settings.originCurrencyCode, () => settings.destCurrencyCode],
   () => {
-    if (rates.canFetch.value) {
-      rates.fetchRates();
-    }
+    rates.fetchRates();
   },
 );
 </script>

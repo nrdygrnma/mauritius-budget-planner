@@ -4,8 +4,9 @@ export const useExportPDF = () => {
   const store = useBudgetStore();
   const settings = useSettingsStore();
   const { formatEUR, formatMonth } = useFormatters();
+  const { fetchPhoto } = useDestinationPhoto();
 
-  function exportPDF() {
+  async function exportPDF() {
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
@@ -18,7 +19,6 @@ export const useExportPDF = () => {
     const contentW = pageW - marginL - marginR;
     let y = 0;
 
-    // ── Colour palette ─────────────────────────────────────
     const c = {
       primary: [15, 158, 117] as [number, number, number],
       primaryDark: [10, 110, 82] as [number, number, number],
@@ -35,7 +35,6 @@ export const useExportPDF = () => {
       accentBg: [240, 253, 248] as [number, number, number],
     };
 
-    // ── Helpers ────────────────────────────────────────────
     function setFont(
       size: number,
       style: "normal" | "bold" = "normal",
@@ -69,16 +68,12 @@ export const useExportPDF = () => {
 
     function sectionCard(title: string) {
       checkPageBreak(14);
-      // Full-width tinted background
       doc.setFillColor(...c.accentBg);
       doc.rect(marginL, y, contentW, 9, "F");
-      // Left accent bar
       doc.setFillColor(...c.primary);
       doc.rect(marginL, y, 3, 9, "F");
-      // Title text
       setFont(8.5, "bold", c.primary);
       doc.text(title.toUpperCase(), marginL + 7, y + 6.2);
-      // Bottom rule
       hLine(y + 9, marginL, pageW - marginR, c.primaryPale, 0.5);
       y += 13;
     }
@@ -144,7 +139,6 @@ export const useExportPDF = () => {
       if (highlight) {
         doc.setFillColor(...c.primary);
         doc.roundedRect(x, y, bw, bh, 2, 2, "F");
-        // Subtle inner highlight strip
         doc.setFillColor(...c.primaryMid);
         doc.roundedRect(x, y, bw, 7, 2, 2, "F");
         doc.rect(x, y + 4, bw, 3, "F");
@@ -173,39 +167,48 @@ export const useExportPDF = () => {
     const planName = String(settings.plannerName ?? "");
     const originName = settings.originCountry?.name ?? "";
     const destName = settings.destCountry?.name ?? "";
+    const headerH = 38;
 
-    // ── Header — compact two-tone band ────────────────────
-    const headerH = 34;
+    // ── Fetch destination photo ────────────────────────────
+    const photoBase64 = destName ? await fetchPhoto(destName) : null;
 
-    // Dark base strip
-    doc.setFillColor(...c.primaryDark);
-    doc.rect(0, 0, pageW, headerH, "F");
+    // ── Header ─────────────────────────────────────────────
+    if (photoBase64) {
+      // Photo fills the full header band
+      doc.addImage(photoBase64, "JPEG", 0, 0, pageW, headerH, "", "FAST");
 
-    // Lighter right panel — geometric accent
-    doc.setFillColor(...c.primary);
-    doc.triangle(pageW * 0.52, 0, pageW, 0, pageW, headerH, "F");
+      // Dark gradient overlay — left two thirds darker for text readability
+      doc.setFillColor(...c.primaryDark);
+      doc.setGState(new (doc as any).GState({ opacity: 0.72 }));
+      doc.rect(0, 0, pageW, headerH, "F");
+      doc.setGState(new (doc as any).GState({ opacity: 1 }));
+    } else {
+      // Fallback — solid two-tone geometric header (no photo)
+      doc.setFillColor(...c.primaryDark);
+      doc.rect(0, 0, pageW, headerH, "F");
+      doc.setFillColor(...c.primary);
+      doc.triangle(pageW * 0.52, 0, pageW, 0, pageW, headerH, "F");
+      doc.setFillColor(...c.primaryMid);
+      doc.circle(pageW - 8, -4, 18, "F");
+      doc.setFillColor(...c.primaryDark);
+      doc.circle(pageW - 8, -4, 12, "F");
+    }
 
-    // Decorative circles (top-right)
-    doc.setFillColor(...c.primaryMid);
-    doc.circle(pageW - 8, -4, 18, "F");
-    doc.setFillColor(...c.primaryDark);
-    doc.circle(pageW - 8, -4, 12, "F");
-
-    // App name — left
+    // App name
     setFont(16, "bold", c.white);
     doc.text("Meridian", marginL, 13);
 
-    // Tagline — left, below name
+    // Tagline
     setFont(7.5, "normal", c.primaryPale);
     doc.text("Relocation Budget Planner", marginL, 20);
 
-    // Plan name — left, below tagline (if set)
+    // Plan name
     if (planName) {
       setFont(8, "bold", c.white);
       doc.text(planName, marginL, 28);
     }
 
-    // Route — right side
+    // Route — right
     if (originName && destName) {
       setFont(8, "bold", c.white);
       doc.text(`${originName}  ->  ${destName}`, pageW - marginR, 13, {
@@ -213,9 +216,20 @@ export const useExportPDF = () => {
       });
     }
 
-    // Date — right, below route
+    // Date — right below route
     setFont(7, "normal", c.primaryPale);
     doc.text(`Exported ${exportDate}`, pageW - marginR, 20, { align: "right" });
+
+    // Photo credit — bottom right of header in tiny text if photo was used
+    if (photoBase64) {
+      setFont(5.5, "normal", [255, 255, 255]);
+      doc.setTextColor(255, 255, 255);
+      doc.setGState(new (doc as any).GState({ opacity: 0.6 }));
+      doc.text("Photo: Unsplash", pageW - marginR, headerH - 2.5, {
+        align: "right",
+      });
+      doc.setGState(new (doc as any).GState({ opacity: 1 }));
+    }
 
     y = headerH + 8;
 
@@ -244,7 +258,6 @@ export const useExportPDF = () => {
     });
     y += 26;
 
-    // Thin primary rule below metrics
     hLine(y, marginL, pageW - marginR, c.primary, 0.5);
     y += 8;
 
@@ -382,11 +395,10 @@ export const useExportPDF = () => {
 
     // ── Purchase target ────────────────────────────────────
     if (pageH - y < 55) addPage();
-
     sectionCard("Purchase target");
     dataRow("Target property price", formatEUR(store.propertyPrice));
     dataRow(
-      "Acquisition fees",
+      `Acquisition fees (${settings.acquisitionFeePercent}%)`,
       formatEUR(store.purchaseFees),
       "normal",
       false,
@@ -404,9 +416,7 @@ export const useExportPDF = () => {
     y += 3;
 
     // ── Savings breakdown ──────────────────────────────────
-    checkPageBreak(55);
     if (pageH - y < 60) addPage();
-
     sectionCard("Monthly savings breakdown");
     dataRow("Combined income", formatEUR(store.totalIncome), "positive");
     dataRow(
@@ -443,9 +453,7 @@ export const useExportPDF = () => {
     y += 3;
 
     // ── Scenarios ──────────────────────────────────────────
-    checkPageBreak(45);
     if (pageH - y < 50) addPage();
-
     sectionCard("Three scenarios");
     store.scenarios.forEach((s, i) => {
       dataRow(
@@ -461,13 +469,10 @@ export const useExportPDF = () => {
     y += 3;
 
     // ── Milestones ─────────────────────────────────────────
-    checkPageBreak(45);
     if (pageH - y < 55) addPage();
-
     sectionCard("Milestones");
     store.milestones.forEach((m, i) => {
-      const isTarget = m.label === "Target reached";
-      if (isTarget) {
+      if (m.label === "Target reached") {
         totalRow(m.label, m.date ? formatMonth(m.date) : "--", "positive");
       } else {
         dataRow(
@@ -485,7 +490,6 @@ export const useExportPDF = () => {
     const totalPages = (doc as any).internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
-      // Footer bar
       doc.setFillColor(...c.light);
       doc.rect(0, pageH - 14, pageW, 14, "F");
       hLine(pageH - 14, 0, pageW, c.lightMid, 0.3);

@@ -112,7 +112,12 @@ export const useBudgetStore = defineStore(
 
     // ── Property / purchase target ────────────────────────────
     const propertyPrice = ref(130000);
-    const purchaseFees = ref(13000);
+    const purchaseFees = computed(
+      () =>
+        Math.round(
+          (propertyPrice.value * settings.acquisitionFeePercent) / 100 / 100,
+        ) * 100,
+    );
     const relocationCosts = ref(1200); // one-time moving/setup costs
     const existingSavings = ref(0);
     const startDate = computed(() => settings.relocationDate);
@@ -231,7 +236,6 @@ export const useBudgetStore = defineStore(
       flightPriceVisitors.value = 800;
       optionalExpenses.value = structuredClone(DEFAULT_OPTIONAL_EXPENSES);
       propertyPrice.value = 130000;
-      purchaseFees.value = 13000;
       relocationCosts.value = 1200;
       existingSavings.value = 0;
     }

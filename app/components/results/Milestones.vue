@@ -13,12 +13,12 @@
         </span>
       </div>
     </template>
-    <UProgress
-      :value="store.progressPercent"
-      class="mb-5"
-      color="primary"
-      size="md"
-    />
+    <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-5">
+      <div
+        :style="{ width: `${store.progressPercent}%` }"
+        class="bg-primary-500 h-2 rounded-full transition-all duration-500"
+      />
+    </div>
     <div class="space-y-0.5">
       <div
         v-for="m in store.milestones"

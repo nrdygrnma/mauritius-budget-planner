@@ -1,6 +1,11 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-950">
-    <PlannerSummary @export="handleExport" @reset="showReset = true" />
+    <DestinationHero />
+    <PlannerSummary
+      :exporting="exporting"
+      @export="handleExport"
+      @reset="showReset = true"
+    />
 
     <div
       class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 xl:grid-cols-2 gap-8"
@@ -13,7 +18,6 @@
         <BudgetOptional />
         <BudgetTarget />
       </div>
-
       <div
         class="space-y-6 xl:sticky xl:top-[calc(var(--ui-header-height)+5rem)] xl:self-start"
       >
@@ -42,9 +46,15 @@ useHead({ title: "Meridian — Relocation Budget Planner" });
 const { exportPDF } = useExportPDF();
 const store = useBudgetStore();
 const showReset = ref(false);
+const exporting = ref(false);
 
-function handleExport() {
-  exportPDF();
+async function handleExport() {
+  exporting.value = true;
+  try {
+    await exportPDF();
+  } finally {
+    exporting.value = false;
+  }
 }
 
 function handleReset() {

@@ -11,6 +11,11 @@ export default defineNuxtConfig({
     "@vueuse/nuxt",
     "pinia-plugin-persistedstate/nuxt",
   ],
+  runtimeConfig: {
+    public: {
+      unsplashAccessKey: "",
+    },
+  },
   css: ["~/assets/css/main.css"],
   ui: {
     theme: {

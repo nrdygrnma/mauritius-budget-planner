@@ -7,6 +7,7 @@ export const useSettingsStore = defineStore(
   "settings",
   () => {
     const lastRatesFetch = ref<string | null>(null); // ISO string for persistence
+    const acquisitionFeePercent = ref(10); // percentage of purchase price
 
     // ── Location ───────────────────────────────────────────────
     const originCountryCode = ref("AT"); // where you live now
@@ -60,6 +61,7 @@ export const useSettingsStore = defineStore(
     }
 
     function resetToDefaults() {
+      acquisitionFeePercent.value = 10;
       originCountryCode.value = "AT";
       destCountryCode.value = "MU";
       originCurrencyCode.value = "EUR";
@@ -75,6 +77,7 @@ export const useSettingsStore = defineStore(
     }
 
     return {
+      acquisitionFeePercent,
       lastRatesFetch,
       originCountryCode,
       destCountryCode,

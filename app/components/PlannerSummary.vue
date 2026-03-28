@@ -69,9 +69,11 @@
 
         <div class="flex items-center gap-1.5 shrink-0 pb-0.5">
           <UButton
+            :disabled="exporting"
+            :label="exporting ? 'Exporting…' : 'Export PDF'"
+            :loading="exporting"
             color="neutral"
             icon="i-lucide-file-down"
-            label="Export PDF"
             size="xs"
             variant="ghost"
             @click="$emit('export')"
@@ -91,10 +93,8 @@
 </template>
 
 <script lang="ts" setup>
-defineEmits<{
-  export: [];
-  reset: [];
-}>();
+defineProps<{ exporting?: boolean }>();
+defineEmits<{ export: []; reset: [] }>();
 
 const store = useBudgetStore();
 const { formatEUR, formatMonth } = useFormatters();

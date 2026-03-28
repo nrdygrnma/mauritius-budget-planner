@@ -18,16 +18,6 @@
         unit="eur"
       />
       <SliderRow
-        v-model="store.purchaseFees"
-        :max="50000"
-        :min="0"
-        :step="500"
-        description="Taxes, legal fees, agent commission, etc."
-        label="Acquisition fees"
-        tip="Typically 8–12% of purchase price"
-        unit="eur"
-      />
-      <SliderRow
         v-model="store.relocationCosts"
         :max="10000"
         :min="0"
@@ -48,18 +38,36 @@
       />
     </div>
     <template #footer>
-      <StatRow
-        :value="formatEUR(store.grandTotal)"
-        label="Grand total needed"
-        large
-        tip="Price + fees + relocation costs"
-        tone="strong"
-      />
+      <div class="space-y-1">
+        <StatRow
+          :label="`Acquisition fees (${settings.acquisitionFeePercent}%)`"
+          :value="formatEUR(store.purchaseFees)"
+          tip="Percentage set in Settings"
+          tone="neutral"
+        />
+        <StatRow
+          :value="formatEUR(store.grandTotal)"
+          label="Grand total needed"
+          large
+          tip="Price + fees + relocation costs"
+          tone="strong"
+        />
+      </div>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-3">
+        Acquisition fee percentage is configured in
+        <NuxtLink
+          class="underline hover:text-gray-600 dark:hover:text-gray-300"
+          to="/settings"
+        >
+          Settings </NuxtLink
+        >.
+      </p>
     </template>
   </UCard>
 </template>
 
 <script lang="ts" setup>
 const store = useBudgetStore();
+const settings = useSettingsStore();
 const { formatEUR } = useFormatters();
 </script>
