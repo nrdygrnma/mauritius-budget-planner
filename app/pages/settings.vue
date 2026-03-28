@@ -63,7 +63,25 @@
             class="w-full"
             value-key="value"
             @update:model-value="onOriginCountryChange"
-          />
+          >
+            <template #leading>
+              <span
+                v-if="settings.originCountry"
+                class="text-base leading-none ml-1"
+              >
+                {{ settings.originCountry.flag }}
+              </span>
+            </template>
+            <template #default>
+              <span class="text-sm">
+                {{
+                  settings.originCountry
+                    ? settings.originCountry.name
+                    : "Select country…"
+                }}
+              </span>
+            </template>
+          </USelectMenu>
         </UFormField>
 
         <UFormField
@@ -80,24 +98,54 @@
             class="w-full"
             value-key="value"
             @update:model-value="onDestCountryChange"
-          />
+          >
+            <template #leading>
+              <span
+                v-if="settings.destCountry"
+                class="text-base leading-none ml-1"
+              >
+                {{ settings.destCountry.flag }}
+              </span>
+            </template>
+            <template #default>
+              <span class="text-sm">
+                {{
+                  settings.destCountry
+                    ? settings.destCountry.name
+                    : "Select country…"
+                }}
+              </span>
+            </template>
+          </USelectMenu>
         </UFormField>
 
+        <!-- Live preview -->
         <div
           v-if="settings.originCountry && settings.destCountry"
           class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
         >
-          <span class="text-2xl">{{ settings.originCountry.flag }}</span>
-          <div class="flex-1 text-sm text-gray-600 dark:text-gray-400">
-            <span class="font-medium text-gray-900 dark:text-white">{{
-              settings.originCountry.name
+          <div class="flex items-center gap-2 flex-1 min-w-0">
+            <span class="text-lg leading-none">{{
+              settings.originCountry.flag
             }}</span>
-            <span class="mx-2 text-gray-300 dark:text-gray-600">→</span>
-            <span class="font-medium text-gray-900 dark:text-white">{{
-              settings.destCountry.name
+            <span
+              class="text-sm font-medium text-gray-900 dark:text-white truncate"
+            >
+              {{ settings.originCountry.name }}
+            </span>
+            <UIcon
+              class="w-3.5 h-3.5 text-gray-400 shrink-0"
+              name="i-lucide-arrow-right"
+            />
+            <span class="text-lg leading-none">{{
+              settings.destCountry.flag
             }}</span>
+            <span
+              class="text-sm font-medium text-gray-900 dark:text-white truncate"
+            >
+              {{ settings.destCountry.name }}
+            </span>
           </div>
-          <span class="text-2xl">{{ settings.destCountry.flag }}</span>
         </div>
       </div>
     </UCard>
@@ -381,6 +429,7 @@
             @change="handleSave"
           />
         </UFormField>
+
         <UFormField
           description="Best case — disciplined spending, growing income"
           label="Optimistic rate (€/mo)"
