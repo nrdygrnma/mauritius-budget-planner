@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+button {
+    cursor: pointer;
+}
+
+[data-aria-hidden="true"] {
+    pointer-events: none;
+}
