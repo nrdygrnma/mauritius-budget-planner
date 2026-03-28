@@ -64,21 +64,22 @@
             value-key="value"
             @update:model-value="onOriginCountryChange"
           >
-            <template #leading>
-              <span
-                v-if="settings.originCountry"
-                class="text-base leading-none ml-1"
-              >
-                {{ settings.originCountry.flag }}
-              </span>
-            </template>
             <template #default>
-              <span class="text-sm">
-                {{
-                  settings.originCountry
-                    ? settings.originCountry.name
-                    : "Select country…"
-                }}
+              <span class="flex items-center gap-2 min-w-0">
+                <span
+                  v-if="settings.originCountry"
+                  class="flex h-5 w-5 items-center justify-center shrink-0 text-base leading-none -translate-y-px"
+                >
+                  {{ settings.originCountry.flag }}
+                </span>
+
+                <span class="truncate text-sm leading-none">
+                  {{
+                    settings.originCountry
+                      ? settings.originCountry.name
+                      : "Select country…"
+                  }}
+                </span>
               </span>
             </template>
           </USelectMenu>
@@ -99,21 +100,22 @@
             value-key="value"
             @update:model-value="onDestCountryChange"
           >
-            <template #leading>
-              <span
-                v-if="settings.destCountry"
-                class="text-base leading-none ml-1"
-              >
-                {{ settings.destCountry.flag }}
-              </span>
-            </template>
             <template #default>
-              <span class="text-sm">
-                {{
-                  settings.destCountry
-                    ? settings.destCountry.name
-                    : "Select country…"
-                }}
+              <span class="flex items-center gap-2 min-w-0">
+                <span
+                  v-if="settings.destCountry"
+                  class="flex h-5 w-5 items-center justify-center shrink-0 text-base leading-none -translate-y-px"
+                >
+                  {{ settings.destCountry.flag }}
+                </span>
+
+                <span class="truncate text-sm leading-none">
+                  {{
+                    settings.destCountry
+                      ? settings.destCountry.name
+                      : "Select country…"
+                  }}
+                </span>
               </span>
             </template>
           </USelectMenu>
@@ -125,23 +127,29 @@
           class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
         >
           <div class="flex items-center gap-2 flex-1 min-w-0">
-            <span class="text-lg leading-none">{{
-              settings.originCountry.flag
-            }}</span>
             <span
-              class="text-sm font-medium text-gray-900 dark:text-white truncate"
+              class="flex h-5 w-5 items-center justify-center shrink-0 text-base leading-none -translate-y-px"
+            >
+              {{ settings.originCountry.flag }}
+            </span>
+            <span
+              class="text-sm font-medium leading-none text-gray-900 dark:text-white truncate"
             >
               {{ settings.originCountry.name }}
             </span>
+
             <UIcon
               class="w-3.5 h-3.5 text-gray-400 shrink-0"
               name="i-lucide-arrow-right"
             />
-            <span class="text-lg leading-none">{{
-              settings.destCountry.flag
-            }}</span>
+
             <span
-              class="text-sm font-medium text-gray-900 dark:text-white truncate"
+              class="flex h-5 w-5 items-center justify-center shrink-0 text-base leading-none -translate-y-px"
+            >
+              {{ settings.destCountry.flag }}
+            </span>
+            <span
+              class="text-sm font-medium leading-none text-gray-900 dark:text-white truncate"
             >
               {{ settings.destCountry.name }}
             </span>

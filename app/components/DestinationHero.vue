@@ -1,7 +1,7 @@
 <template>
   <div v-if="settings.destCountry" class="max-w-7xl mx-auto px-6 pt-8">
     <div
-      class="relative w-full overflow-hidden rounded-2xl shadow-md"
+      class="relative w-full overflow-hidden rounded-md shadow-md"
       style="height: 220px"
     >
       <!-- Photo or skeleton -->
@@ -98,7 +98,6 @@ async function loadPhoto() {
 onMounted(loadPhoto);
 watch(() => settings.destCountryCode, loadPhoto);
 </script>
-
 
 <style scoped>
 .fade-enter-active {

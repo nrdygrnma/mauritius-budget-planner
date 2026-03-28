@@ -23,7 +23,7 @@
       <span
         class="text-xs text-gray-400 dark:text-gray-500 font-normal hidden sm:block"
       >
-        {{ settings.plannerName || "relocation planner" }}
+        {{ settings.plannerName || "Relocation Planner" }}
       </span>
     </div>
   </div>
