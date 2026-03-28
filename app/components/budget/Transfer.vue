@@ -14,25 +14,29 @@
         :min="0"
         :step="100"
         label="Monthly transfer (USD)"
+        tip="Minimum required by your visa or permit"
         unit="usd"
       />
     </div>
     <template #footer>
       <div class="space-y-1">
         <StatRow
-          :label="`EUR / USD rate`"
           :value="settings.originToUsdRate.toFixed(4)"
+          label="EUR / USD rate"
+          tip="Set in Settings via live rates"
           tone="neutral"
         />
         <StatRow
           :label="`${settings.destCurrencyCode} per EUR`"
           :value="settings.destUnitsPerOrigin.toFixed(4)"
+          tip="Set in Settings via live rates"
           tone="neutral"
         />
         <StatRow
           :value="`≈ ${formatEUR(store.transferEUR)}`"
           label="Transfer in euros"
           large
+          tip="Spent at destination — not savings"
           tone="neutral"
           top-border
         />
@@ -42,9 +46,8 @@
         <NuxtLink
           class="underline hover:text-gray-600 dark:hover:text-gray-300"
           to="/settings"
+          >Settings</NuxtLink
         >
-          Settings
-        </NuxtLink>
         and updated automatically.
       </p>
     </template>

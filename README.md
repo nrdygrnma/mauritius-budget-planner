@@ -16,12 +16,13 @@ Every slider updates the savings timeline instantly. Settings persist across ses
 - **Dual-currency support** — destination expenses in local currency, converted via configurable rates
 - **Live exchange rates** — fetched automatically from Frankfurter (ECB, 31 currencies) with fallback to
   fawazahmed0/exchange-api (200+ currencies including MUR, KES, GHS, and more)
-- **Optional future expenses** — toggle items like car rental, housing fees, and business costs individually to
-  stress-test your timeline
+- **Optional future expenses** — toggle items like initial relocation costs, car rental, housing fees, and business
+  costs individually to stress-test your timeline
 - **Three scenarios** — conservative, base case, and optimistic savings rates side by side
 - **Milestone tracker** — projected dates for €25k, €50k, €75k, €100k, €125k, and target reached
 - **Live savings chart** — cumulative savings curve with a target reference line
 - **Transfer coverage warning** — alerts when destination living costs exceed the visa transfer amount
+- **Contextual info tips** — hover tooltips and popovers throughout explaining every input and result
 - **Settings page** — configure origin/destination country, currencies, exchange rates, relocation date, and scenario
   thresholds
 - **Export to PDF** — full formatted report with all figures, scenarios, and milestones
@@ -67,6 +68,7 @@ app/
 │   │   ├── Scenarios.vue       # Three scenario comparison
 │   │   └── Breakdown.vue       # Monthly savings breakdown
 │   ├── AppLogo.vue             # Logo mark + wordmark
+│   ├── InfoTip.vue             # Reusable tooltip/popover info icon
 │   ├── PlannerSummary.vue      # Sticky summary strip
 │   ├── ResetModal.vue          # Reset confirmation modal
 │   ├── SavingsChart.vue        # Chart.js canvas component
@@ -135,6 +137,26 @@ accumulates toward the purchase target.
 
 ---
 
+## Optional expenses
+
+Optional expenses are toggled off by default and can be enabled individually to stress-test the timeline. Each one has
+its own slider that appears when enabled.
+
+| Key                     | Label                        | Default | Notes                                            |
+|-------------------------|------------------------------|---------|--------------------------------------------------|
+| `initialRelocationCost` | Initial relocation costs     | €5,000  | Shipping, temporary accommodation, arrival setup |
+| `carRental`             | Car rental / lease           | €300/mo | Enable once you stop relying on public transport |
+| `carInsurance`          | Car insurance + road tax     | €80/mo  | Annual cost amortised monthly                    |
+| `fuel`                  | Fuel                         | €60/mo  | Only relevant once you have a car                |
+| `healthTopUp`           | Private healthcare top-up    | €100/mo | Specialist visits beyond base insurance          |
+| `housingFees`           | Housing / building fees      | €170/mo | Strata, syndic, or HOA fees once you own         |
+| `professionalSubs`      | Professional subscriptions   | €80/mo  | Tools, certifications, software licences         |
+| `businessCosts`         | Business / freelance costs   | €100/mo | Accounting, software, backup internet            |
+| `emergencyFund`         | Emergency fund contribution  | €200/mo | Monthly target toward a 3–6 month reserve        |
+| `familySupport`         | Family support / remittances | €0/mo   | Support to family remaining at home              |
+
+---
+
 ## Exchange rates
 
 Rates are fetched automatically when you open the Settings page, and re-fetched whenever you change currencies. No API
@@ -146,7 +168,17 @@ key is required for either source.
 | [fawazahmed0/exchange-api](https://github.com/fawazahmed0/exchange-api) | 200+                     | Either currency is outside the ECB set |
 
 Rates can always be overridden manually in Settings. The current rates are shown as read-only reference values in the
-Transfer card on the planner page.
+Transfer card on the planner page — exchange rates are not editable on the planner to keep the source of truth in one
+place.
+
+---
+
+## Info tips
+
+Every significant input and result has a contextual info icon (`ⓘ`) that explains what the field means, how it is
+calculated, or what to watch out for. Hover over any info icon to see the explanation. These are implemented via the
+reusable `InfoTip.vue` component, which uses `UTooltip` for single-line hints and `UPopover` in hover mode for richer
+multi-line content.
 
 ---
 
@@ -157,6 +189,7 @@ The **Export PDF** button in the summary strip generates a formatted A4 report c
 - Cover header with plan name, relocation route with flag emojis, and export date
 - Four summary metric boxes (monthly savings, total needed, months to target, ready-by date)
 - All expense sections with alternating row shading
+- Only active optional expenses are included
 - Monthly savings breakdown
 - Three scenarios with projected dates
 - All milestones

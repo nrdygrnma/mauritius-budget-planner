@@ -20,6 +20,7 @@
           :min="0"
           :step="1000"
           label="Rent (dest. currency)"
+          tip="Converted to EUR using Settings rate"
           unit="dest"
         />
         <SliderRow
@@ -28,6 +29,7 @@
           :min="0"
           :step="500"
           label="Electricity (dest. currency)"
+          tip="Can be high in hot climates (A/C)"
           unit="dest"
         />
         <SliderRow
@@ -61,6 +63,7 @@
           :min="100"
           :step="10"
           label="Groceries"
+          tip="Lower if shopping at local markets"
           unit="eur"
         />
         <SliderRow
@@ -87,6 +90,7 @@
           :step="10"
           description="Public transport, taxis, no car assumed initially"
           label="Transport"
+          tip="No car assumed — see Optional expenses"
           unit="eur"
         />
         <SliderRow
@@ -95,6 +99,7 @@
           :min="0"
           :step="10"
           label="Pet (food + vet)"
+          tip="Set to zero if not applicable"
           unit="eur"
         />
         <SliderRow
@@ -111,6 +116,7 @@
           :min="0"
           :step="10"
           label="Leisure + misc buffer"
+          tip="Catch-all for subscriptions and surprises"
           unit="eur"
         />
       </div>
@@ -120,6 +126,7 @@
         <StatRow
           :value="`−${formatEUR(store.totalDestExpenses)}`"
           label="Total destination expenses"
+          tip="All destination expenses converted to euros. This should be covered by your visa transfer — see the surplus line below"
           tone="negative"
         />
         <StatRow
@@ -127,6 +134,7 @@
           :value="`${store.transferSurplus >= 0 ? '+' : ''}${formatEUR(store.transferSurplus)}/mo`"
           label="Transfer surplus"
           large
+          tip="Positive = transfer covers all costs"
           top-border
         />
       </div>

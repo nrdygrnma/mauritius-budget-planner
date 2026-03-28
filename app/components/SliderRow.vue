@@ -1,31 +1,25 @@
 <template>
   <div
-    :class="{ 'opacity-35 pointer-events-none select-none': disabled }"
-    class="group py-3 transition-opacity duration-200"
+    :class="disabled ? 'opacity-35 pointer-events-none' : ''"
+    class="py-3 px-1 transition-opacity"
   >
-    <div class="flex items-baseline justify-between mb-3 gap-4">
-      <span class="text-sm text-gray-500 dark:text-gray-400 leading-snug">
-        {{ label }}
-      </span>
+    <div class="flex items-center justify-between mb-2 gap-2">
+      <div class="flex items-center gap-1.5 min-w-0">
+        <span class="text-sm text-gray-600 dark:text-gray-400 truncate">{{
+          label
+        }}</span>
+        <InfoTip v-if="tip" :text="tip" />
+      </div>
       <span
-        class="text-sm font-semibold text-gray-900 dark:text-white tabular-nums shrink-0"
+        class="text-sm font-semibold tabular-nums text-gray-900 dark:text-white shrink-0"
       >
         {{ displayValue }}
       </span>
     </div>
-    <USlider
-      v-model="model"
-      :disabled="disabled"
-      :max="max"
-      :min="min"
-      :step="step"
-      color="primary"
-      size="md"
-      tooltip
-    />
+    <USlider v-model="model" :max="max" :min="min" :step="step" size="sm" />
     <p
       v-if="description"
-      class="text-xs text-gray-400 dark:text-gray-500 mt-2 leading-relaxed"
+      class="text-xs text-gray-400 dark:text-gray-500 mt-1.5"
     >
       {{ description }}
     </p>
@@ -38,12 +32,13 @@ const props = defineProps<{
   min: number;
   max: number;
   step: number;
-  unit?: "eur" | "usd" | "rs" | "rate" | "dest" | "count";
+  unit?: "eur" | "usd" | "dest" | "rate" | "count";
   description?: string;
   disabled?: boolean;
+  tip?: string;
 }>();
 
-const model = defineModel<number>({ required: true });
+const model = defineModel<number>();
 const { formatEUR, formatUSD, formatDestCurrency, formatCount, formatRate } =
   useFormatters();
 

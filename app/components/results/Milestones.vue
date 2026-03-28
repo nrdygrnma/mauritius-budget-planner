@@ -2,7 +2,10 @@
   <UCard>
     <template #header>
       <div class="flex items-center justify-between">
-        <SectionHeader icon="i-lucide-flag" title="Milestones" />
+        <div class="flex items-center gap-2">
+          <SectionHeader icon="i-lucide-flag" title="Milestones" />
+          <InfoTip text="Dates when savings reach each threshold" />
+        </div>
         <span
           class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums"
         >

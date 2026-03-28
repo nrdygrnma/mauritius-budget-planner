@@ -1,6 +1,16 @@
 import type { OptionalExpense } from "~/types";
 
 export const DEFAULT_OPTIONAL_EXPENSES: Record<string, OptionalExpense> = {
+  initialRelocationCost: {
+    enabled: false,
+    value: 5000,
+    label: "Initial relocation costs",
+    min: 500,
+    max: 20000,
+    step: 500,
+    description:
+      "Shipping, temporary accommodation, and setup costs on arrival — one-time but spread here as a monthly saving target",
+  },
   carRental: {
     enabled: false,
     value: 300,

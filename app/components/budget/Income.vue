@@ -14,14 +14,17 @@
         :min="1000"
         :step="100"
         label="Your income"
+        tip="Net take-home after tax"
         unit="eur"
       />
+
       <SliderRow
         v-model="store.incomePartner"
         :max="10000"
         :min="1000"
         :step="100"
         label="Partner's income"
+        tip="Set to minimum if not applicable"
         unit="eur"
       />
     </div>
@@ -30,6 +33,7 @@
         :value="formatEUR(store.totalIncome)"
         label="Total combined"
         large
+        tip="Available before any deductions"
         tone="positive"
       />
     </template>

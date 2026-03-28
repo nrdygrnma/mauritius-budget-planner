@@ -15,6 +15,7 @@
           :min="0"
           :step="10"
           label="Health insurance (2 people)"
+          tip="Paid from home country account, not transfer"
           unit="eur"
         />
       </div>
@@ -32,6 +33,7 @@
           :min="0"
           :step="1"
           label="Trips per year (you + partner)"
+          tip="Return journeys for both partners"
           unit="count"
         />
         <SliderRow
@@ -40,6 +42,7 @@
           :min="200"
           :step="50"
           label="Cost per person return"
+          tip="Per person — multiplied by 2 internally"
           unit="eur"
         />
       </div>
@@ -57,6 +60,7 @@
           :min="0"
           :step="1"
           label="Number of visitors to finance"
+          tip="People whose flights you pay for"
           unit="count"
         />
         <SliderRow
@@ -73,6 +77,7 @@
           :min="200"
           :step="50"
           label="Flight cost per person return"
+          tip="Often same route as your own flights"
           unit="eur"
         />
       </div>
@@ -82,17 +87,20 @@
         <StatRow
           :label="`Your flights — ${formatEUR(store.flightsYouAnnual)}/yr`"
           :value="`−${formatEUR(store.flightsYouMonthly)}/mo`"
+          tip="Annual total ÷ 12"
           tone="negative"
         />
         <StatRow
           :label="`Visitor flights — ${formatEUR(store.flightsVisitorsAnnual)}/yr`"
           :value="`−${formatEUR(store.flightsVisitorsMonthly)}/mo`"
+          tip="Annual total ÷ 12"
           tone="negative"
         />
         <StatRow
           :value="`−${formatEUR(store.totalHomeDeductions)}`"
           label="Total home deductions/mo"
           large
+          tip="Transfer + insurance + flights"
           tone="negative"
           top-border
         />
@@ -100,7 +108,6 @@
     </template>
   </UCard>
 </template>
-
 <script lang="ts" setup>
 const store = useBudgetStore();
 const { formatEUR } = useFormatters();

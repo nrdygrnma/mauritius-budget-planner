@@ -15,6 +15,7 @@
       <StatRow
         :value="`−${formatEUR(store.transferEUR)}`"
         label="Visa transfer"
+        tip="Spent at destination — not savings"
         tone="negative"
       />
       <StatRow
@@ -25,12 +26,14 @@
       <StatRow
         :value="`−${formatEUR(store.totalFlightsMonthly)}`"
         label="Flights (amortised)"
+        tip="Your flights + visitor flights ÷ 12"
         tone="negative"
       />
       <StatRow
         v-if="store.totalOptionalActive > 0"
         :value="`−${formatEUR(store.totalOptionalActive)}`"
         label="Optional expenses"
+        tip="Sum of all active optional items"
         tone="negative"
       />
       <StatRow
@@ -38,6 +41,7 @@
         :value="formatEUR(store.adjustedMonthlySavings)"
         label="Net monthly savings"
         large
+        tip="Accumulates toward purchase target"
         top-border
       />
     </div>

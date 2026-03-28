@@ -1,7 +1,10 @@
 <template>
   <UCard>
     <template #header>
-      <SectionHeader icon="i-lucide-bar-chart-2" title="Three scenarios" />
+      <div class="flex items-center gap-2">
+        <SectionHeader icon="i-lucide-bar-chart-2" title="Three scenarios" />
+        <InfoTip text="Thresholds set in Settings" />
+      </div>
     </template>
     <div class="space-y-2">
       <div
