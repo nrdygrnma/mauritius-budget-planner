@@ -1,4 +1,4 @@
-import type { Country } from "~/types/settings";
+import type { Country } from "~/types";
 
 export const COUNTRIES: Country[] = [
   // Europe
@@ -367,23 +367,22 @@ export const COUNTRIES: Country[] = [
 export const getCountry = (code: string): Country | undefined =>
   COUNTRIES.find((c) => c.code === code);
 
-export const COUNTRIES_GROUPED = Object.entries(
-  COUNTRIES.reduce(
-    (acc, c) => {
-      if (!acc[c.region]) acc[c.region] = [];
-      acc[c.region]!.push(c);
-      return acc;
-    },
-    {} as Record<string, Country[]>,
-  ),
-)
+const countriesByRegion = COUNTRIES.reduce<Record<string, Country[]>>(
+  (acc, country) => {
+    (acc[country.region] ??= []).push(country);
+    return acc;
+  },
+  {},
+);
+
+export const COUNTRIES_GROUPED = Object.entries(countriesByRegion)
   .sort(([a], [b]) => a.localeCompare(b))
-  .map(([region, countries]) => ({
+  .map(([region, countries]: [string, Country[]]) => ({
     label: region,
-    items: countries
+    items: [...countries]
       .sort((a, b) => a.name.localeCompare(b.name))
-      .map((c) => ({
-        label: `${c.flag} ${c.name}`,
-        value: c.code,
+      .map((country) => ({
+        label: `${country.flag} ${country.name}`,
+        value: country.code,
       })),
   }));
