@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 export const useExportPDF = () => {
   const store = useBudgetStore();
   const settings = useSettingsStore();
-  const { formatEUR, formatMonth, formatDestCurrency } = useFormatters();
+  const { formatEUR, formatMonth } = useFormatters();
 
   function exportPDF() {
     const doc = new jsPDF({
@@ -18,22 +18,28 @@ export const useExportPDF = () => {
     const contentW = pageW - marginL - marginR;
     let y = 0;
 
-    // ── Helpers ────────────────────────────────────────────
-    const colors = {
+    // ── Colour palette ─────────────────────────────────────
+    const c = {
       primary: [15, 158, 117] as [number, number, number],
+      primaryDark: [10, 110, 82] as [number, number, number],
+      primaryMid: [12, 134, 100] as [number, number, number],
+      primaryPale: [178, 236, 218] as [number, number, number],
       dark: [17, 24, 39] as [number, number, number],
+      mid: [55, 65, 81] as [number, number, number],
       muted: [107, 114, 128] as [number, number, number],
       light: [243, 244, 246] as [number, number, number],
+      lightMid: [229, 231, 235] as [number, number, number],
       white: [255, 255, 255] as [number, number, number],
       positive: [15, 118, 110] as [number, number, number],
       negative: [185, 28, 28] as [number, number, number],
-      border: [229, 231, 235] as [number, number, number],
+      accentBg: [240, 253, 248] as [number, number, number],
     };
 
+    // ── Helpers ────────────────────────────────────────────
     function setFont(
       size: number,
       style: "normal" | "bold" = "normal",
-      color = colors.dark,
+      color: [number, number, number] = c.dark,
     ) {
       doc.setFontSize(size);
       doc.setFont("helvetica", style);
@@ -42,25 +48,35 @@ export const useExportPDF = () => {
 
     function addPage() {
       doc.addPage();
-      y = 18;
+      y = 20;
     }
 
     function checkPageBreak(needed: number) {
-      if (y + needed > pageH - 18) addPage();
+      if (y + needed > pageH - 20) addPage();
     }
 
-    function hLine(yPos: number, x1 = marginL, x2 = pageW - marginR) {
-      doc.setDrawColor(...colors.border);
-      doc.setLineWidth(0.3);
+    function hLine(
+      yPos: number,
+      x1 = marginL,
+      x2 = pageW - marginR,
+      color = c.lightMid,
+      width = 0.3,
+    ) {
+      doc.setDrawColor(...color);
+      doc.setLineWidth(width);
       doc.line(x1, yPos, x2, yPos);
     }
 
-    function sectionCard(title: string, icon: string) {
-      checkPageBreak(12);
-      doc.setFillColor(...colors.primary);
-      doc.roundedRect(marginL, y, contentW, 8, 1.5, 1.5, "F");
-      setFont(8.5, "bold", colors.white);
-      doc.text(`${icon}  ${title}`, marginL + 4, y + 5.3);
+    function sectionCard(title: string) {
+      checkPageBreak(14);
+      // Left accent bar
+      doc.setFillColor(...c.primary);
+      doc.rect(marginL, y, 3, 7, "F");
+      // Title
+      setFont(8, "bold", c.primary);
+      doc.text(title.toUpperCase(), marginL + 6, y + 5.2);
+      // Subtle underline
+      hLine(y + 8, marginL, pageW - marginR, c.lightMid, 0.2);
       y += 12;
     }
 
@@ -73,20 +89,44 @@ export const useExportPDF = () => {
     ) {
       checkPageBreak(7);
       if (bgShade) {
-        doc.setFillColor(...colors.light);
-        doc.rect(marginL, y - 1, contentW, 7, "F");
+        doc.setFillColor(...c.light);
+        doc.rect(marginL, y - 0.5, contentW, 6.5, "F");
       }
-      setFont(8.5, bold ? "bold" : "normal", colors.muted);
+      setFont(8, bold ? "bold" : "normal", bold ? c.mid : c.muted);
       doc.text(label, marginL + 2, y + 4);
       const valueColor =
         tone === "positive"
-          ? colors.positive
+          ? c.positive
           : tone === "negative"
-            ? colors.negative
-            : colors.dark;
-      setFont(8.5, bold ? "bold" : "normal", valueColor);
+            ? c.negative
+            : bold
+              ? c.dark
+              : c.mid;
+      setFont(8, bold ? "bold" : "normal", valueColor);
       doc.text(value, pageW - marginR - 2, y + 4, { align: "right" });
-      y += 7;
+      y += 6.5;
+    }
+
+    function totalRow(
+      label: string,
+      value: string,
+      tone: "positive" | "negative" | "normal" = "normal",
+    ) {
+      checkPageBreak(9);
+      doc.setFillColor(...c.accentBg);
+      doc.rect(marginL, y - 0.5, contentW, 8, "F");
+      hLine(y - 0.5, marginL, pageW - marginR, c.primaryPale, 0.4);
+      setFont(8.5, "bold", c.mid);
+      doc.text(label, marginL + 2, y + 5);
+      const valueColor =
+        tone === "positive"
+          ? c.positive
+          : tone === "negative"
+            ? c.negative
+            : c.dark;
+      setFont(8.5, "bold", valueColor);
+      doc.text(value, pageW - marginR - 2, y + 5, { align: "right" });
+      y += 9;
     }
 
     function metricBox(
@@ -96,88 +136,117 @@ export const useExportPDF = () => {
       value: string,
       highlight = false,
     ) {
-      const boxH = 18;
+      const bw = w - 3;
+      const bh = 20;
       if (highlight) {
-        doc.setFillColor(...colors.primary);
-        doc.roundedRect(x, y, w - 2, boxH, 2, 2, "F");
-        setFont(7, "normal", [178, 236, 218]);
-        doc.text(label, x + 4, y + 6);
-        setFont(11, "bold", colors.white);
-        doc.text(value, x + 4, y + 14);
+        doc.setFillColor(...c.primary);
+        doc.roundedRect(x, y, bw, bh, 2, 2, "F");
+        // Subtle inner highlight strip
+        doc.setFillColor(...c.primaryMid);
+        doc.roundedRect(x, y, bw, 7, 2, 2, "F");
+        doc.rect(x, y + 4, bw, 3, "F");
+        setFont(6.5, "bold", c.primaryPale);
+        doc.text(label.toUpperCase(), x + 4, y + 5);
+        setFont(12, "bold", c.white);
+        doc.text(value, x + 4, y + 15.5);
       } else {
-        doc.setFillColor(...colors.light);
-        doc.roundedRect(x, y, w - 2, boxH, 2, 2, "F");
-        setFont(7, "normal", colors.muted);
-        doc.text(label, x + 4, y + 6);
-        setFont(11, "bold", colors.dark);
-        doc.text(value, x + 4, y + 14);
+        doc.setFillColor(...c.light);
+        doc.roundedRect(x, y, bw, bh, 2, 2, "F");
+        doc.setFillColor(...c.lightMid);
+        doc.roundedRect(x, y, bw, 7, 2, 2, "F");
+        doc.rect(x, y + 4, bw, 3, "F");
+        setFont(6.5, "bold", c.muted);
+        doc.text(label.toUpperCase(), x + 4, y + 5);
+        setFont(11, "bold", c.dark);
+        doc.text(value, x + 4, y + 15.5);
       }
     }
 
-    // ── Cover / header ─────────────────────────────────────
-    doc.setFillColor(...colors.primary);
-    doc.rect(0, 0, pageW, 52, "F");
-
-    // Logo mark
-    doc.setFillColor(255, 255, 255, 0.15);
-    doc.setFillColor(255, 255, 255);
-    doc.setGState(new (doc as any).GState({ opacity: 0.15 }));
-    doc.circle(pageW - 22, 26, 18, "F");
-    doc.setGState(new (doc as any).GState({ opacity: 1 }));
-
-    setFont(22, "bold", colors.white);
-    doc.text("Meridian", marginL, 22);
-    setFont(9, "normal", [178, 236, 218]);
-    doc.text("Relocation Budget Planner", marginL, 30);
-
-    if (settings.plannerName) {
-      setFont(10, "bold", colors.white);
-      doc.text(settings.plannerName, marginL, 40);
-    }
-
-    setFont(7.5, "normal", [178, 236, 218]);
     const exportDate = new Date().toLocaleDateString("en-GB", {
       day: "numeric",
       month: "long",
       year: "numeric",
     });
-    doc.text(`Exported ${exportDate}`, marginL, settings.plannerName ? 47 : 40);
+    const planName = String(settings.plannerName ?? "");
+    const originName = settings.originCountry?.name ?? "";
+    const destName = settings.destCountry?.name ?? "";
 
-    // Relocation route
-    if (settings.originCountry && settings.destCountry) {
-      const route = `${settings.originCountry.flag} ${settings.originCountry.name}  →  ${settings.destCountry.flag} ${settings.destCountry.name}`;
-      setFont(9, "normal", colors.white);
-      doc.text(route, pageW - marginR, settings.plannerName ? 47 : 40, {
+    // ── Header — compact two-tone band ────────────────────
+    const headerH = 34;
+
+    // Dark base strip
+    doc.setFillColor(...c.primaryDark);
+    doc.rect(0, 0, pageW, headerH, "F");
+
+    // Lighter right panel — geometric accent
+    doc.setFillColor(...c.primary);
+    doc.triangle(pageW * 0.52, 0, pageW, 0, pageW, headerH, "F");
+
+    // Decorative circles (top-right)
+    doc.setFillColor(...c.primaryMid);
+    doc.circle(pageW - 8, -4, 18, "F");
+    doc.setFillColor(...c.primaryDark);
+    doc.circle(pageW - 8, -4, 12, "F");
+
+    // App name — left
+    setFont(16, "bold", c.white);
+    doc.text("Meridian", marginL, 13);
+
+    // Tagline — left, below name
+    setFont(7.5, "normal", c.primaryPale);
+    doc.text("Relocation Budget Planner", marginL, 20);
+
+    // Plan name — left, below tagline (if set)
+    if (planName) {
+      setFont(8, "bold", c.white);
+      doc.text(planName, marginL, 28);
+    }
+
+    // Route — right side
+    if (originName && destName) {
+      setFont(8, "bold", c.white);
+      doc.text(`${originName}  ->  ${destName}`, pageW - marginR, 13, {
         align: "right",
       });
     }
 
-    y = 62;
+    // Date — right, below route
+    setFont(7, "normal", c.primaryPale);
+    doc.text(`Exported ${exportDate}`, pageW - marginR, 20, { align: "right" });
+
+    y = headerH + 8;
 
     // ── Summary metrics ────────────────────────────────────
     const colW = contentW / 4;
-    const labels = [
+    const metricLabels = [
       "Monthly savings",
       "Total needed",
       "Months to target",
       "Ready by",
     ];
-    const values = [
+    const metricValues = [
       formatEUR(store.adjustedMonthlySavings),
       formatEUR(store.grandTotal),
-      store.monthsToTarget?.toString() ?? "—",
-      store.readyDate ? formatMonth(store.readyDate) : "—",
+      store.monthsToTarget?.toString() ?? "--",
+      store.readyDate ? formatMonth(store.readyDate) : "--",
     ];
-    labels.forEach((label, i) => {
-      metricBox(marginL + i * colW, colW, label, values[i] ?? "—", i === 3);
+    metricLabels.forEach((label, i) => {
+      metricBox(
+        marginL + i * colW,
+        colW,
+        label,
+        metricValues[i] ?? "--",
+        i === 3,
+      );
     });
     y += 26;
 
-    hLine(y);
+    // Thin primary rule below metrics
+    hLine(y, marginL, pageW - marginR, c.primary, 0.5);
     y += 8;
 
     // ── Income ─────────────────────────────────────────────
-    sectionCard("Income", "€");
+    sectionCard("Income");
     dataRow("Your income", formatEUR(store.incomeYou));
     dataRow(
       "Partner's income",
@@ -186,39 +255,46 @@ export const useExportPDF = () => {
       false,
       true,
     );
-    dataRow("Total combined", formatEUR(store.totalIncome), "positive", true);
-    y += 4;
+    totalRow("Total combined", formatEUR(store.totalIncome), "positive");
+    y += 3;
 
     // ── Visa transfer ──────────────────────────────────────
-    sectionCard("Visa transfer requirement", "$");
-    dataRow("Monthly transfer", `$${store.transferUSD.toLocaleString()}`);
-    dataRow("EUR/USD rate", store.eurUsdRate.toFixed(4), "normal", false, true);
+    sectionCard("Visa transfer requirement");
+    dataRow(
+      "Monthly transfer",
+      `$${store.transferUSD.toLocaleString("en-GB")}`,
+    );
+    dataRow(
+      "EUR/USD rate",
+      settings.originToUsdRate.toFixed(4),
+      "normal",
+      false,
+      true,
+    );
     dataRow(
       `${settings.destCurrencyCode} per EUR`,
-      store.destCurrencyRate.toFixed(2),
+      settings.destUnitsPerOrigin.toFixed(2),
     );
-    dataRow(
-      "Transfer in euros",
-      `≈ ${formatEUR(store.transferEUR)}`,
-      "normal",
-      true,
-      true,
-    );
-    y += 4;
+    totalRow("Transfer in euros", `approx. ${formatEUR(store.transferEUR)}`);
+    y += 3;
 
     // ── Destination expenses ───────────────────────────────
-    sectionCard("Destination living expenses", "⌂");
-    dataRow("Rent", formatDestCurrency(store.rent));
+    sectionCard("Destination living expenses");
+    const destCode = settings.destCurrencyCode;
+    dataRow(
+      "Rent",
+      `${destCode} ${Math.round(store.rent).toLocaleString("en-GB")}`,
+    );
     dataRow(
       "Electricity",
-      formatDestCurrency(store.electricity),
+      `${destCode} ${Math.round(store.electricity).toLocaleString("en-GB")}`,
       "normal",
       false,
       true,
     );
     dataRow("Internet", formatEUR(store.internet));
     dataRow(
-      "Mobile phones (2×)",
+      "Mobile phones (2x)",
       formatEUR(store.mobilePhones),
       "normal",
       false,
@@ -242,72 +318,65 @@ export const useExportPDF = () => {
       false,
       true,
     );
-    dataRow(
+    totalRow(
       "Total destination expenses",
-      `−${formatEUR(store.totalDestExpenses)}`,
+      `-${formatEUR(store.totalDestExpenses)}`,
       "negative",
-      true,
     );
-    dataRow(
+    totalRow(
       "Transfer surplus",
       `${store.transferSurplus >= 0 ? "+" : ""}${formatEUR(store.transferSurplus)}/mo`,
       store.transferSurplus >= 0 ? "positive" : "negative",
-      true,
-      true,
     );
-    y += 4;
+    y += 3;
 
-    // ── Home country expenses ──────────────────────────────
-    sectionCard("Home country expenses", "✈");
+    // ── Home expenses ──────────────────────────────────────
+    sectionCard("Home country expenses");
     dataRow("Health insurance", formatEUR(store.healthInsurance));
     dataRow(
-      `Return flights (${store.tripsYouPerYear}×/yr, ${formatEUR(store.flightPriceYou)}/person)`,
-      `−${formatEUR(store.flightsYouMonthly)}/mo`,
+      `Return flights (${store.tripsYouPerYear}x/yr, ${formatEUR(store.flightPriceYou)}/person)`,
+      `-${formatEUR(store.flightsYouMonthly)}/mo`,
       "negative",
       false,
       true,
     );
     dataRow(
-      `Visitor flights (${store.numDependants} people, ${store.tripsVisitorsPerYear}×/yr)`,
-      `−${formatEUR(store.flightsVisitorsMonthly)}/mo`,
+      `Visitor flights (${store.numDependants} people, ${store.tripsVisitorsPerYear}x/yr)`,
+      `-${formatEUR(store.flightsVisitorsMonthly)}/mo`,
       "negative",
     );
-    dataRow(
+    totalRow(
       "Total home deductions/mo",
-      `−${formatEUR(store.totalHomeDeductions)}`,
+      `-${formatEUR(store.totalHomeDeductions)}`,
       "negative",
-      true,
-      true,
     );
-    y += 4;
+    y += 3;
 
     // ── Optional expenses ──────────────────────────────────
     const activeOptionals = Object.values(store.optionalExpenses).filter(
       (e) => e.enabled,
     );
     if (activeOptionals.length > 0) {
-      sectionCard("Optional expenses (active)", "⚙");
+      sectionCard("Optional expenses (active)");
       activeOptionals.forEach((e, i) => {
         dataRow(
           e.label,
-          `−${formatEUR(e.value)}/mo`,
+          `-${formatEUR(e.value)}/mo`,
           "negative",
           false,
           i % 2 === 1,
         );
       });
-      dataRow(
+      totalRow(
         "Total optional/mo",
-        `−${formatEUR(store.totalOptionalActive)}`,
+        `-${formatEUR(store.totalOptionalActive)}`,
         "negative",
-        true,
-        true,
       );
-      y += 4;
+      y += 3;
     }
 
     // ── Purchase target ────────────────────────────────────
-    sectionCard("Purchase target", "⊕");
+    sectionCard("Purchase target");
     dataRow("Target property price", formatEUR(store.propertyPrice));
     dataRow(
       "Acquisition fees",
@@ -324,28 +393,28 @@ export const useExportPDF = () => {
       false,
       true,
     );
-    dataRow("Grand total needed", formatEUR(store.grandTotal), "normal", true);
-    y += 4;
+    totalRow("Grand total needed", formatEUR(store.grandTotal));
+    y += 3;
 
     // ── Savings breakdown ──────────────────────────────────
-    checkPageBreak(60);
-    sectionCard("Monthly savings breakdown", "∑");
+    checkPageBreak(55);
+    sectionCard("Monthly savings breakdown");
     dataRow("Combined income", formatEUR(store.totalIncome), "positive");
     dataRow(
       "Visa transfer",
-      `−${formatEUR(store.transferEUR)}`,
+      `-${formatEUR(store.transferEUR)}`,
       "negative",
       false,
       true,
     );
     dataRow(
       "Health insurance",
-      `−${formatEUR(store.healthInsurance)}`,
+      `-${formatEUR(store.healthInsurance)}`,
       "negative",
     );
     dataRow(
       "Flights (amortised)",
-      `−${formatEUR(store.totalFlightsMonthly)}`,
+      `-${formatEUR(store.totalFlightsMonthly)}`,
       "negative",
       false,
       true,
@@ -353,46 +422,49 @@ export const useExportPDF = () => {
     if (store.totalOptionalActive > 0) {
       dataRow(
         "Optional expenses",
-        `−${formatEUR(store.totalOptionalActive)}`,
+        `-${formatEUR(store.totalOptionalActive)}`,
         "negative",
       );
     }
-    dataRow(
+    totalRow(
       "Net monthly savings",
       formatEUR(store.adjustedMonthlySavings),
       store.adjustedMonthlySavings > 0 ? "positive" : "negative",
-      true,
-      true,
     );
-    y += 4;
+    y += 3;
 
     // ── Scenarios ──────────────────────────────────────────
-    checkPageBreak(50);
-    sectionCard("Three scenarios", "◈");
+    checkPageBreak(45);
+    sectionCard("Three scenarios");
     store.scenarios.forEach((s, i) => {
       dataRow(
-        `${s.label} (${formatEUR(s.rate)}/mo)`,
+        `${s.label}  (${formatEUR(s.rate)}/mo)`,
         s.months
-          ? `${s.months} months → ${s.date ? formatMonth(s.date) : "—"}`
-          : "—",
+          ? `${s.months} months  ->  ${s.date ? formatMonth(s.date) : "--"}`
+          : "--",
         s.isBase ? "positive" : "normal",
         s.isBase,
         i % 2 === 1,
       );
     });
-    y += 4;
+    y += 3;
 
     // ── Milestones ─────────────────────────────────────────
-    checkPageBreak(50);
-    sectionCard("Milestones", "⚑");
+    checkPageBreak(45);
+    sectionCard("Milestones");
     store.milestones.forEach((m, i) => {
-      dataRow(
-        m.label,
-        m.date ? formatMonth(m.date) : "—",
-        m.label === "Target reached" ? "positive" : "normal",
-        m.label === "Target reached",
-        i % 2 === 1,
-      );
+      const isTarget = m.label === "Target reached";
+      if (isTarget) {
+        totalRow(m.label, m.date ? formatMonth(m.date) : "--", "positive");
+      } else {
+        dataRow(
+          m.label,
+          m.date ? formatMonth(m.date) : "--",
+          "normal",
+          false,
+          i % 2 === 1,
+        );
+      }
     });
     y += 8;
 
@@ -400,21 +472,27 @@ export const useExportPDF = () => {
     const totalPages = (doc as any).internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
-      hLine(pageH - 12);
-      setFont(7, "normal", colors.muted);
-      doc.text("Meridian — Relocation Budget Planner", marginL, pageH - 7);
-      doc.text(`Page ${p} of ${totalPages}`, pageW - marginR, pageH - 7, {
+      // Footer bar
+      doc.setFillColor(...c.light);
+      doc.rect(0, pageH - 14, pageW, 14, "F");
+      hLine(pageH - 14, 0, pageW, c.lightMid, 0.3);
+      setFont(6.5, "normal", c.muted);
+      doc.text("Meridian -- Relocation Budget Planner", marginL, pageH - 6);
+      doc.text(`Page ${p} of ${totalPages}`, pageW - marginR, pageH - 6, {
         align: "right",
       });
-      doc.text(exportDate, pageW / 2, pageH - 7, { align: "center" });
+      setFont(6.5, "bold", c.primary);
+      doc.text(exportDate, pageW / 2, pageH - 6, { align: "center" });
     }
 
     // ── Save ───────────────────────────────────────────────
-    const filename = settings.plannerName
-      ? `meridian-${settings.plannerName.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.pdf`
-      : `meridian-budget-${new Date().toISOString().slice(0, 10)}.pdf`;
-
-    doc.save(filename);
+    const slug = planName
+      ? planName
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "")
+      : "budget";
+    doc.save(`meridian-${slug}-${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
   return { exportPDF };

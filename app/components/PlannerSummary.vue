@@ -10,7 +10,7 @@
               <span class="text-xs text-gray-400 dark:text-gray-500"
                 >Monthly savings</span
               >
-              <InfoTip side="bottom" text="Income minus all deductions" />
+              <InfoTip side="top" text="Income minus all deductions" />
             </div>
             <span
               :class="
@@ -29,7 +29,7 @@
               <span class="text-xs text-gray-400 dark:text-gray-500"
                 >Total needed</span
               >
-              <InfoTip side="bottom" text="Price + fees + relocation costs" />
+              <InfoTip side="top" text="Price + fees + relocation costs" />
             </div>
             <span
               class="text-xl font-bold tabular-nums leading-tight text-gray-900 dark:text-white"
@@ -43,10 +43,7 @@
               <span class="text-xs text-gray-400 dark:text-gray-500"
                 >Months to target</span
               >
-              <InfoTip
-                side="bottom"
-                text="Remaining amount divided by monthly savings. Based on your current slider values — see the Scenarios card for conservative and optimistic projections"
-              />
+              <InfoTip side="top" text="Remaining amount / monthly savings" />
             </div>
             <span
               class="text-xl font-bold tabular-nums leading-tight text-gray-900 dark:text-white"
@@ -60,10 +57,7 @@
               <span class="text-xs text-teal-500 dark:text-teal-400"
                 >Ready by</span
               >
-              <InfoTip
-                side="bottom"
-                text="Relocation date + months to target"
-              />
+              <InfoTip side="top" text="Relocation date + months to target" />
             </div>
             <span
               class="text-xl font-bold tabular-nums leading-tight text-teal-600 dark:text-teal-400"
