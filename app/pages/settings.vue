@@ -554,6 +554,20 @@
       </div>
     </UCard>
 
+    <UCard>
+      <UFormField
+        description="Used by Panier to read PDF and image brochures"
+        label="Anthropic API key"
+      >
+        <UInput
+          v-model="settings.anthropicApiKey"
+          class="w-full font-mono"
+          placeholder="sk-ant-..."
+          type="password"
+        />
+      </UFormField>
+    </UCard>
+
     <!-- Footer actions -->
     <div class="flex items-center justify-between pt-2 pb-8">
       <UButton

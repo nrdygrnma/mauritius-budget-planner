@@ -6,6 +6,8 @@ import type { Currency } from "~/types";
 export const useSettingsStore = defineStore(
   "settings",
   () => {
+    const anthropicApiKey = ref("");
+
     const lastRatesFetch = ref<string | null>(null); // ISO string for persistence
     const acquisitionFeePercent = ref(10); // percentage of purchase price
 
@@ -77,6 +79,7 @@ export const useSettingsStore = defineStore(
     }
 
     return {
+      anthropicApiKey,
       acquisitionFeePercent,
       lastRatesFetch,
       originCountryCode,

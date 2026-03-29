@@ -12,8 +12,10 @@ export default defineNuxtConfig({
     "pinia-plugin-persistedstate/nuxt",
   ],
   runtimeConfig: {
+    anthropicApiKey: "",
     public: {
       unsplashAccessKey: "",
+      hasAnthropicKey: import.meta.env.NUXT_ANTHROPIC_API_KEY ? "true" : "",
     },
   },
   css: ["~/assets/css/main.css"],
@@ -23,6 +25,9 @@ export default defineNuxtConfig({
     },
   },
   vite: {
+    server: {
+      hmr: true,
+    },
     plugins: [tailwindcss()],
     optimizeDeps: {
       include: [
@@ -33,6 +38,15 @@ export default defineNuxtConfig({
         "chart.js",
         "chartjs-plugin-annotation",
       ],
+    },
+  },
+
+  nitro: {
+    devServer: {
+      watch: [],
+    },
+    rollupConfig: {
+      external: [],
     },
   },
 });
